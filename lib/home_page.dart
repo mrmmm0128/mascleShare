@@ -1,7 +1,9 @@
 // home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:muscle_share/history_pages/show_history.dart';
 import 'package:muscle_share/profile.dart';
 import 'package:muscle_share/upload_photo.dart';
+import 'package:muscle_share/history_pages/show_history.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -28,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 209, 209, 0),
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.account_circle, color: Colors.black, size: 30),
@@ -41,81 +43,113 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         title: Center(
           child: Text(
-            'Masclue Share',
+            'Mascle Share',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
         ),
         actions: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white, // 背景色を白に
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black.withOpacity(0.3)), // 薄い枠線
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: DropdownButton<String>(
-                value: selectedCategory,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedCategory = newValue!;
-                  });
-                },
-                items: categories.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Center(
-                        child: Text(
-                      value,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold, // アイテムのテキストを太字に
-                      ),
-                    )),
-                  );
-                }).toList(),
-              ),
-            ),
+          IconButton(
+            icon:
+                Icon(Icons.date_range_outlined, color: Colors.black, size: 30),
+            onPressed: () {
+              // Implement search logic
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ShowHistory()),
+              );
+            },
           ),
         ],
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      isPrivateMode = true;
-                    });
-                  },
-                  child: Text(
-                    'プライベートモード',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight:
-                          isPrivateMode ? FontWeight.bold : FontWeight.normal,
-                      color: isPrivateMode ? Colors.black : Colors.grey,
-                    ),
+                // プライベートと全世界の選択ボタン
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            isPrivateMode = true;
+                          });
+                        },
+                        child: Text(
+                          'プライベート',
+                          style: TextStyle(
+                            fontWeight: isPrivateMode
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isPrivateMode
+                                ? const Color.fromARGB(255, 209, 209, 0)
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            isPrivateMode = false;
+                          });
+                        },
+                        child: Text(
+                          '全世界',
+                          style: TextStyle(
+                            fontWeight: !isPrivateMode
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: !isPrivateMode
+                                ? const Color.fromARGB(255, 209, 209, 0)
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      isPrivateMode = false;
-                    });
-                  },
-                  child: Text(
-                    '全世界モード',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight:
-                          !isPrivateMode ? FontWeight.bold : FontWeight.normal,
-                      color: !isPrivateMode ? Colors.black : Colors.grey,
+                // DropdownButtonを右端に配置
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 5),
+                    child: DropdownButton<String>(
+                      value: selectedCategory,
+                      dropdownColor: Colors.black,
+                      borderRadius: BorderRadius.circular(12),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedCategory = newValue!;
+                        });
+                      },
+                      underline: SizedBox(),
+                      icon: Icon(Icons.arrow_drop_down,
+                          color: Color.fromARGB(
+                              255, 209, 209, 0)), // 👈 アイコンの色を黄色に
+                      isDense: true,
+                      items: categories
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Center(
+                            child: Text(
+                              value,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 209, 209, 0),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
@@ -132,8 +166,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.man),
-                      const SizedBox(height: 10),
+                      Row(children: [
+                        Icon(Icons.man_3_outlined,
+                            color: const Color.fromARGB(255, 209, 209, 0)),
+                        const SizedBox(width: 8),
+                        Text('ユーザー名',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: const Color.fromARGB(255, 209, 209, 0))),
+                      ]),
+                      const SizedBox(height: 8),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(15), // 画像の角を丸める
                         child: Image.network(
@@ -162,9 +204,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           sampleImages[index]['caption']!,
                           style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
+                              color: const Color.fromARGB(255, 209, 209, 0),
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
+                      SizedBox(height: 8), // キャプションと次の画像の間隔
                     ],
                   ),
                 );
@@ -174,14 +219,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue,
+        backgroundColor: Color.fromARGB(255, 209, 209, 0),
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => UploadScreen()),
           );
         },
-        child: Icon(Icons.add_a_photo, color: Colors.white),
+        child: Icon(Icons.add_a_photo, color: Colors.black),
       ),
     );
   }
