@@ -38,6 +38,7 @@ dependencies:
 
 
   image_picker: ^0.8.5+3  # 最新のバージョンに合わせてください
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

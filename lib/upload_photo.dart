@@ -3,6 +3,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io'; // File クラスを使用
 
 class UploadScreen extends StatefulWidget {
+  const UploadScreen({super.key});
+
   @override
   _UploadScreenState createState() => _UploadScreenState();
 }
