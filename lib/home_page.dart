@@ -1,9 +1,11 @@
 // home_screen.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:muscle_share/history_pages/show_history.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
+import 'package:muscle_share/methods/savaData.dart';
+import 'package:muscle_share/pages/show_history.dart';
 import 'package:muscle_share/profile.dart';
-import 'package:muscle_share/upload_photo.dart';
-import 'package:muscle_share/history_pages/show_history.dart';
+import 'package:image_picker/image_picker.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -25,6 +27,37 @@ class _HomeScreenState extends State<HomeScreen> {
     },
     {'url': 'https://via.placeholder.com/300x500', 'caption': 'Back Gains!'},
   ];
+
+  // カメラを起動して画像を取得する
+  Future<void> _takePhoto() async {
+    final picker = ImagePicker();
+    String deviceId = getDeviceIDweb(); // デバイス ID を取得
+
+    try {
+      final XFile? pickedFile =
+          await picker.pickImage(source: ImageSource.camera);
+
+      if (pickedFile != null) {
+        if (kIsWeb) {
+          // 🌍 Web の場合 → Uint8List に変換
+          try {
+            Uint8List imageBytes = await pickedFile.readAsBytes();
+            await savePhotoWeb(imageBytes, deviceId);
+            print("成功しました。");
+          } catch (e) {
+            print("エラーがはっせいしました。");
+          }
+        } else {
+          // 📱 iOS / Android の場合 → XFile をそのまま使う
+          await savePhotoMobile(pickedFile, deviceId);
+        }
+      } else {
+        print("❌ No image selected.");
+      }
+    } catch (e) {
+      print("❌ エラーが発生しました: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,96 +97,111 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.black,
       body: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-            child: Row(
-              children: [
-                // プライベートと全世界の選択ボタン
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            isPrivateMode = true;
-                          });
-                        },
-                        child: Text(
-                          'プライベート',
-                          style: TextStyle(
-                            fontWeight: isPrivateMode
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: isPrivateMode
-                                ? const Color.fromARGB(255, 209, 209, 0)
-                                : Colors.grey,
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+              child: Row(
+                children: [
+                  // プライベートと全世界の選択ボタン
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.transparent, // 背景を透明に
+                            splashFactory:
+                                NoSplash.splashFactory, // タップエフェクトを無効化
                           ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            isPrivateMode = false;
-                          });
-                        },
-                        child: Text(
-                          '全世界',
-                          style: TextStyle(
-                            fontWeight: !isPrivateMode
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: !isPrivateMode
-                                ? const Color.fromARGB(255, 209, 209, 0)
-                                : Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // DropdownButtonを右端に配置
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 5),
-                    child: DropdownButton<String>(
-                      value: selectedCategory,
-                      dropdownColor: Colors.black,
-                      borderRadius: BorderRadius.circular(12),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedCategory = newValue!;
-                        });
-                      },
-                      underline: SizedBox(),
-                      icon: Icon(Icons.arrow_drop_down,
-                          color: Color.fromARGB(
-                              255, 209, 209, 0)), // 👈 アイコンの色を黄色に
-                      isDense: true,
-                      items: categories
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Center(
-                            child: Text(
-                              value,
-                              style: TextStyle(
-                                color: Color.fromARGB(255, 209, 209, 0),
-                                fontWeight: FontWeight.bold,
-                              ),
+                          onPressed: () {
+                            setState(() {
+                              isPrivateMode = true;
+                            });
+                          },
+                          child: Text(
+                            'プライベート',
+                            style: TextStyle(
+                              fontWeight: isPrivateMode
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isPrivateMode
+                                  ? const Color.fromARGB(255, 209, 209, 0)
+                                  : Colors.grey,
                             ),
                           ),
-                        );
-                      }).toList(),
+                        ),
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.transparent, // 背景を透明に
+                            splashFactory:
+                                NoSplash.splashFactory, // タップエフェクトを無効化
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              isPrivateMode = false;
+                            });
+                          },
+                          child: Text(
+                            '全世界',
+                            style: TextStyle(
+                              fontWeight: !isPrivateMode
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: !isPrivateMode
+                                  ? const Color.fromARGB(255, 209, 209, 0)
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  // DropdownButtonを右端に配置
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 5),
+                      child: DropdownButton<String>(
+                        value: selectedCategory,
+                        dropdownColor: Colors.black,
+                        borderRadius: BorderRadius.circular(12),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedCategory = newValue!;
+                          });
+                        },
+                        underline: SizedBox(),
+                        icon: Icon(Icons.arrow_drop_down,
+                            color: Color.fromARGB(
+                                255, 209, 209, 0)), // 👈 アイコンの色を黄色に
+                        isDense: true,
+                        items: categories
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Center(
+                              child: Text(
+                                value,
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 209, 209, 0),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Expanded(
@@ -221,10 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color.fromARGB(255, 209, 209, 0),
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => UploadScreen()),
-          );
+          _takePhoto();
         },
         child: Icon(Icons.add_a_photo, color: Colors.black),
       ),

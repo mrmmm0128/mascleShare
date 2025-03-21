@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDBZJjV-rlL-QbUdjTmoTpQ_Lta52VJE1k',
-    appId: '1:362152912464:android:972156fa9866e0cc03d355',
+    appId: '1:362152912464:android:d8249fdc3a65e47503d355',
     messagingSenderId: '362152912464',
     projectId: 'muscleshare-b34dd',
     storageBucket: 'muscleshare-b34dd.firebasestorage.app',
@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'muscleshare-b34dd.firebasestorage.app',
     measurementId: 'G-S0NTLGDTH1',
   );
+
 }
