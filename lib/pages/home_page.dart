@@ -6,7 +6,7 @@ import 'package:muscle_share/methods/fetchPhoto.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/methods/savaData.dart';
 import 'package:muscle_share/pages/show_history.dart';
-import 'package:muscle_share/profile.dart';
+import 'package:muscle_share/pages/profile.dart';
 import 'package:image_picker/image_picker.dart';
 
 class HomeScreen extends StatefulWidget {

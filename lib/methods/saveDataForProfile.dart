@@ -13,10 +13,19 @@ Future<void> saveInfoWeb(
           .doc("profile")
           .set({"photo": imageUrl, "startDay": startDay, "name": name});
     } else {
-      await FirebaseFirestore.instance
-          .collection(deviceId)
-          .doc("profile")
-          .update({"startDay": startDay, "name": name});
+      final docRef =
+          FirebaseFirestore.instance.collection(deviceId).doc("profile");
+
+// ドキュメントが存在するかどうか確認
+      final docSnapshot = await docRef.get();
+
+      if (docSnapshot.exists) {
+        // ドキュメントが存在する場合はupdate
+        await docRef.update({"startDay": startDay, "name": name});
+      } else {
+        // ドキュメントが存在しない場合はset
+        await docRef.set({"startDay": startDay, "name": name});
+      }
     }
     print(imageUrl);
 
