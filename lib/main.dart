@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:muscle_share/firebase_options.dart';
 import 'package:muscle_share/home_page.dart';
 
-Future<void> main() async {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  runApp(const MyApp());
 }
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

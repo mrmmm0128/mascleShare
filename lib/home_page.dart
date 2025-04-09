@@ -1,6 +1,8 @@
 // home_screen.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:muscle_share/methods/fetchPhoto.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/methods/savaData.dart';
 import 'package:muscle_share/pages/show_history.dart';
@@ -13,6 +15,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<Map<String, String>> originPhotoList = [];
+  List<Map<String, String>> photoList = [];
   String selectedCategory = 'All';
   bool isPrivateMode = true;
   final List<String> categories = ['All', 'Chest', 'Back', 'Legs', 'Arms'];
@@ -27,6 +31,28 @@ class _HomeScreenState extends State<HomeScreen> {
     },
     {'url': 'https://via.placeholder.com/300x500', 'caption': 'Back Gains!'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPhotos();
+  }
+
+  Future<void> fetchPhotos() async {
+    List<Map<String, String>> photos = await fetchTodayphoto();
+    setState(() {
+      originPhotoList = photoList = photos;
+    });
+  }
+
+  void changeCategry(String newCategoly) {
+    if (newCategoly == "All") {
+      photoList = originPhotoList;
+    } else {
+      photoList =
+          originPhotoList.where((map) => map["mascle"] == newCategoly).toList();
+    }
+  }
 
   // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
@@ -43,6 +69,10 @@ class _HomeScreenState extends State<HomeScreen> {
           try {
             Uint8List imageBytes = await pickedFile.readAsBytes();
             await savePhotoWeb(imageBytes, deviceId);
+            setState(() {
+              fetchPhotos();
+            });
+
             print("成功しました。");
           } catch (e) {
             print("エラーがはっせいしました。");
@@ -175,6 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onChanged: (String? newValue) {
                           setState(() {
                             selectedCategory = newValue!;
+                            changeCategry(selectedCategory);
                           });
                         },
                         underline: SizedBox(),
@@ -205,63 +236,69 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(10),
-              itemCount: sampleImages.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(children: [
-                        Icon(Icons.man_3_outlined,
-                            color: const Color.fromARGB(255, 209, 209, 0)),
-                        const SizedBox(width: 8),
-                        Text('ユーザー名',
+            child: RefreshIndicator(
+              onRefresh: fetchPhotos, // 👈 引っ張ったときに実行される関数
+              color: Color.fromARGB(255, 209, 209, 0), // インジケーターの色（任意）
+              backgroundColor: Colors.black, // 背景色（任意）
+              child: ListView.builder(
+                padding: EdgeInsets.all(10),
+                itemCount: photoList.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Icon(Icons.man_3_outlined,
+                              color: const Color.fromARGB(255, 209, 209, 0)),
+                          const SizedBox(width: 8),
+                          Text('ユーザー名',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      const Color.fromARGB(255, 209, 209, 0))),
+                        ]),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(15), // 画像の角を丸める
+                          child: CachedNetworkImage(
+                            imageUrl: photoList[index]["url"]!,
+                            width: double.infinity,
+                            height: 500,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) {
+                              print("⚠️ 画像の読み込みエラー: $error");
+                              return Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.error,
+                                      size: 50, color: Colors.red),
+                                  Text("画像を取得できませんでした"),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 8), // 画像とキャプションの間隔
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            photoList[index]['caption']!,
                             style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: const Color.fromARGB(255, 209, 209, 0))),
-                      ]),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(15), // 画像の角を丸める
-                        child: Image.network(
-                          sampleImages[index]['url']!,
-                          width: double.infinity,
-                          height: 500,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: double.infinity,
-                              height: 500,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius:
-                                    BorderRadius.circular(15), // エラー時も角を丸める
-                              ),
-                              child: Icon(Icons.broken_image,
-                                  size: 100, color: Colors.grey),
-                            );
-                          },
+                                color: const Color.fromARGB(255, 209, 209, 0),
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 8), // 画像とキャプションの間隔
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          sampleImages[index]['caption']!,
-                          style: TextStyle(
-                              color: const Color.fromARGB(255, 209, 209, 0),
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      SizedBox(height: 8), // キャプションと次の画像の間隔
-                    ],
-                  ),
-                );
-              },
+                        SizedBox(height: 8), // キャプションと次の画像の間隔
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],

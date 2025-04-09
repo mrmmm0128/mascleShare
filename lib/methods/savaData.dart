@@ -14,29 +14,29 @@ Future<void> savePhotoWeb(Uint8List photoBytes, String deviceId) async {
     String timeKey = DateTime.now().toIso8601String();
     String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    String? userInput = await showMascleSelectionDialog();
+    Map<String, String?>? userInput = await showMascleSelectionDialog();
 
     await FirebaseFirestore.instance.collection(deviceId).doc("info").set({
       timeKey: {
         "photo": imageUrl,
-        "caption": "",
+        "caption": userInput?["caption"],
         "comment": "",
         "icon": "",
         "deviceId": deviceId,
         "name": "",
-        "mascle": userInput
+        "mascle": userInput?["muscle"]
       }
     }, SetOptions(merge: true));
 
     await FirebaseFirestore.instance.collection(dateKey).doc("memory").set({
       timeKey: {
         "photo": imageUrl,
-        "caption": "",
+        "caption": userInput?["caption"],
         "comment": "",
         "icon": "",
         "deviceId": deviceId,
         "name": "",
-        "mascle": userInput
+        "mascle": userInput?["muscle"]
       }
     }, SetOptions(merge: true));
 
@@ -53,29 +53,29 @@ Future<void> savePhotoMobile(XFile photoFile, String deviceId) async {
     String timeKey = DateTime.now().toIso8601String();
     String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    String? userInput = await showMascleSelectionDialog();
+    Map<String, String?>? userInput = await showMascleSelectionDialog();
 
     await FirebaseFirestore.instance.collection(deviceId).doc("info").set({
       timeKey: {
         "photo": imageUrl,
-        "caption": "",
+        "caption": userInput?["caption"],
         "comment": "",
         "icon": "",
         "deviceId": deviceId,
         "name": "",
-        "mascle": userInput
+        "mascle": userInput?["muscle"]
       }
     }, SetOptions(merge: true));
 
     await FirebaseFirestore.instance.collection(dateKey).doc("memory").set({
       timeKey: {
         "photo": imageUrl,
-        "caption": "",
+        "caption": userInput?["caption"],
         "comment": "",
         "icon": "",
         "deviceId": deviceId,
         "name": "",
-        "mascle": userInput
+        "mascle": userInput?["muscle"]
       }
     }, SetOptions(merge: true));
 
@@ -85,7 +85,6 @@ Future<void> savePhotoMobile(XFile photoFile, String deviceId) async {
   }
 }
 
-// 🔹 Firebase Storage に画像をアップロード (Web 用)
 Future<String> uploadImageToStorageWeb(
     String deviceId, Uint8List fileBytes) async {
   try {
@@ -93,7 +92,10 @@ Future<String> uploadImageToStorageWeb(
         "images/$deviceId/${DateTime.now().millisecondsSinceEpoch}.jpg";
     Reference ref = FirebaseStorage.instance.ref().child(filePath);
 
-    UploadTask uploadTask = ref.putData(fileBytes);
+    // 🛠 MIME タイプを指定
+    SettableMetadata metadata = SettableMetadata(contentType: "image/jpeg");
+
+    UploadTask uploadTask = ref.putData(fileBytes, metadata);
     TaskSnapshot snapshot = await uploadTask;
     return await snapshot.ref.getDownloadURL();
   } catch (e) {
@@ -108,8 +110,8 @@ Future<String> uploadImageToStorageMobile(String deviceId, XFile file) async {
     String filePath =
         "images/$deviceId/${DateTime.now().millisecondsSinceEpoch}.jpg";
     Reference ref = FirebaseStorage.instance.ref().child(filePath);
-
-    UploadTask uploadTask = ref.putFile(File(file.path));
+    SettableMetadata metadata = SettableMetadata(contentType: "image/jpeg");
+    UploadTask uploadTask = ref.putFile(File(file.path), metadata);
     TaskSnapshot snapshot = await uploadTask;
     return await snapshot.ref.getDownloadURL();
   } catch (e) {
@@ -119,27 +121,40 @@ Future<String> uploadImageToStorageMobile(String deviceId, XFile file) async {
 }
 
 // 入力ダイアログを表示する関数
-Future<String?> showMascleSelectionDialog() async {
+Future<Map<String, String?>?> showMascleSelectionDialog() async {
   String? selectedMascle;
-  List<String> mascleOptions = ["胸", "背中", "腕", "肩", "脚", "腹筋"];
+  String? caption;
+  List<String> mascleOptions = ["Chest", "Back", "Legs", "Arms"];
 
-  return showDialog<String>(
+  return showDialog<Map<String, String?>>(
     context: navigatorKey.currentContext!,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text("筋トレ部位を選択"),
-        content: DropdownButtonFormField<String>(
-          value: selectedMascle,
-          decoration: InputDecoration(labelText: "部位を選択"),
-          items: mascleOptions.map((String mascle) {
-            return DropdownMenuItem<String>(
-              value: mascle,
-              child: Text(mascle),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            selectedMascle = newValue;
-          },
+        title: Text("筋トレ情報を入力"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              value: selectedMascle,
+              decoration: InputDecoration(labelText: "部位を選択"),
+              items: mascleOptions.map((String mascle) {
+                return DropdownMenuItem<String>(
+                  value: mascle,
+                  child: Text(mascle),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                selectedMascle = newValue;
+              },
+            ),
+            SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(labelText: "キャプションを入力"),
+              onChanged: (value) {
+                caption = value;
+              },
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -147,7 +162,13 @@ Future<String?> showMascleSelectionDialog() async {
             child: Text("キャンセル"),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, selectedMascle), // 保存
+            onPressed: () => Navigator.pop(
+              context,
+              {
+                "mascle": selectedMascle,
+                "caption": caption,
+              },
+            ),
             child: Text("保存"),
           ),
         ],
