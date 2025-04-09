@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:muscle_share/firebase_options.dart';
-import 'package:muscle_share/home_page.dart';
+import 'package:muscle_share/pages/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
