@@ -11,14 +11,7 @@ Future<String> getDeviceUUID() async {
   } else if (io.Platform.isIOS) {
     // iOSデバイスの場合
     final iosInfo = await deviceInfo.iosInfo;
-    deviceId = iosInfo.identifierForVendor ?? ""; // iOS固有のID
-//    } else if (html.window.localStorage['deviceId'] != null) {
-//      // Webの場合、localStorageからデバイスIDを取得
-//      deviceId = html.window.localStorage['deviceId']!;
-//    } else {
-//      // Webで初めてのアクセスの場合、一意なIDを生成してlocalStorageに保存
-//      deviceId = DateTime.now().millisecondsSinceEpoch.toString();
-//      html.window.localStorage['deviceId'] = deviceId; // localStorageに保存
+    deviceId = iosInfo.identifierForVendor ?? "";
   }
 
   return deviceId;

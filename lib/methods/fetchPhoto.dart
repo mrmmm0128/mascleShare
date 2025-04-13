@@ -21,7 +21,10 @@ Future<List<Map<String, String>>> fetchTodayphoto() async {
             photoList.add({
               "url": entry.value["photo"],
               "caption": entry.value["caption"],
-              "mascle": entry.value["mascle"] ?? ""
+              "mascle": entry.value["mascle"] ?? "",
+              "icon": entry.value["icon"] ?? "",
+              "name": entry.value["name"] ?? "",
+              "deviceId": entry.value["deviceId"],
             });
           }
           print(entry.value["photo"]);
