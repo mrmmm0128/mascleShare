@@ -10,39 +10,73 @@ import 'package:muscle_share/main.dart';
 // 🔹 Firestore に画像を保存 (Web 用)
 Future<void> savePhotoWeb(Uint8List photoBytes, String deviceId) async {
   try {
-    String imageUrl = await uploadImageToStorageWeb(deviceId, photoBytes);
-    String timeKey = DateTime.now().toIso8601String();
-    String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    // ローディングインジケーターを表示
+    showDialog(
+      context: navigatorKey.currentContext!,
+      barrierDismissible: false, // ダイアログ外をタップしても閉じない
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(), // ローディングインジケーター
+        );
+      },
+    );
 
+    // 画像アップロードの処理
+    String imageUrl = await uploadImageToStorageWeb(deviceId, photoBytes);
+
+    // その他の処理
+    String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    String uniqueKey = '${dateKey}_${DateTime.now().millisecondsSinceEpoch}';
     Map<String, String?>? userInput = await showMascleSelectionDialog();
+    String icon = "";
+    String name = "";
+    String mascle = userInput!["mascle"]!;
+    String caption = userInput["caption"]!;
+
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection(deviceId)
+        .doc("profile")
+        .get();
+
+    if (snapshot.exists) {
+      Map<String, dynamic>? data = snapshot.data() as Map<String, dynamic>?;
+      if (data != null) {
+        icon = data["photo"] ?? "";
+        name = data["name"] ?? "";
+      }
+    }
 
     await FirebaseFirestore.instance.collection(deviceId).doc("info").set({
-      timeKey: {
+      uniqueKey: {
         "photo": imageUrl,
-        "caption": userInput?["caption"],
+        "caption": caption,
         "comment": "",
-        "icon": "",
+        "icon": icon,
         "deviceId": deviceId,
-        "name": "",
-        "mascle": userInput?["muscle"]
+        "day": dateKey,
+        "name": name,
+        "mascle": mascle
       }
     }, SetOptions(merge: true));
 
     await FirebaseFirestore.instance.collection(dateKey).doc("memory").set({
-      timeKey: {
+      uniqueKey: {
         "photo": imageUrl,
-        "caption": userInput?["caption"],
+        "caption": caption,
         "comment": "",
-        "icon": "",
+        "icon": icon,
         "deviceId": deviceId,
-        "name": "",
-        "mascle": userInput?["muscle"]
+        "name": name,
+        "mascle": mascle
       }
     }, SetOptions(merge: true));
 
     print("✅ Web: 画像を Firestore に保存しました！");
   } catch (e) {
     print("❌ Web: Firestore への保存に失敗しました: $e");
+  } finally {
+    // ローディングインジケーターを閉じる
+    Navigator.of(navigatorKey.currentContext!).pop();
   }
 }
 
@@ -50,32 +84,49 @@ Future<void> savePhotoWeb(Uint8List photoBytes, String deviceId) async {
 Future<void> savePhotoMobile(XFile photoFile, String deviceId) async {
   try {
     String imageUrl = await uploadImageToStorageMobile(deviceId, photoFile);
-    String timeKey = DateTime.now().toIso8601String();
     String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
     Map<String, String?>? userInput = await showMascleSelectionDialog();
+    String uniqueKey = '${dateKey}_${DateTime.now().millisecondsSinceEpoch}';
+    String mascle = userInput!["mascle"]!;
+    String caption = userInput["caption"]!;
 
+    String icon = "";
+    String name = "";
+
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection(deviceId)
+        .doc("profile")
+        .get();
+
+    if (snapshot.exists) {
+      Map<String, dynamic>? data = snapshot.data() as Map<String, dynamic>?;
+      if (data != null) {
+        icon = data["photo"] ?? "";
+        name = data["name"] ?? "";
+      }
+    }
     await FirebaseFirestore.instance.collection(deviceId).doc("info").set({
-      timeKey: {
+      uniqueKey: {
         "photo": imageUrl,
-        "caption": userInput?["caption"],
+        "caption": caption,
         "comment": "",
-        "icon": "",
+        "icon": icon,
         "deviceId": deviceId,
-        "name": "",
-        "mascle": userInput?["muscle"]
+        "day": dateKey,
+        "name": name,
+        "mascle": mascle
       }
     }, SetOptions(merge: true));
 
     await FirebaseFirestore.instance.collection(dateKey).doc("memory").set({
-      timeKey: {
+      uniqueKey: {
         "photo": imageUrl,
-        "caption": userInput?["caption"],
+        "caption": caption,
         "comment": "",
-        "icon": "",
+        "icon": icon,
         "deviceId": deviceId,
-        "name": "",
-        "mascle": userInput?["muscle"]
+        "name": name,
+        "mascle": mascle
       }
     }, SetOptions(merge: true));
 
@@ -128,6 +179,7 @@ Future<Map<String, String?>?> showMascleSelectionDialog() async {
 
   return showDialog<Map<String, String?>>(
     context: navigatorKey.currentContext!,
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
         title: Text("筋トレ情報を入力"),
@@ -145,6 +197,7 @@ Future<Map<String, String?>?> showMascleSelectionDialog() async {
               }).toList(),
               onChanged: (String? newValue) {
                 selectedMascle = newValue;
+                print(selectedMascle);
               },
             ),
             SizedBox(height: 16),
