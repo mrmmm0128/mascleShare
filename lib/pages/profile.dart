@@ -14,15 +14,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   late Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
-  late XFile? pickedFile = null; // nullで初期化
+  XFile? pickedFile; // nullで初期化
   late String deviceId;
   late Map<String, String> infoList = {};
   bool _isLoading = true;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    deviceId = getDeviceIDweb();
+    deviceId = getDeviceUUID() as String;
     initializeProfile();
   }
 
@@ -38,7 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    deviceId = getDeviceIDweb(); // デバイス ID を取得
+    deviceId = getDeviceUUID() as String; // デバイス ID を取得
 
     try {
       pickedFile = await picker.pickImage(source: ImageSource.camera);
@@ -192,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: ElevatedButton(
                   onPressed: () async {
                     saveInfoWeb(_nameController.text, _dateController.text,
-                        deviceId, imageBytes);
+                        deviceId as String, imageBytes);
                   },
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color>(

@@ -1,5 +1,4 @@
 import 'dart:io' as io;
-import 'dart:html' as html;
 import 'package:device_info_plus/device_info_plus.dart';
 
 Future<String> getDeviceUUID() async {
@@ -24,17 +23,17 @@ Future<String> getDeviceUUID() async {
   return deviceId;
 }
 
-String getDeviceIDweb() {
-  try {
-    final storage = html.window.localStorage;
-    String? uuid = storage['deviceUUID'];
-    if (uuid == null) {
-      uuid = DateTime.now().millisecondsSinceEpoch.toString();
-      storage['deviceUUID'] = uuid; // 保存
-    }
-    return uuid;
-  } catch (e) {
-    print('localStorage エラー: $e');
-    return '';
-  }
-}
+//String getDeviceIDweb() {
+//  try {
+//    final storage = html.window.localStorage;
+//    String? uuid = storage['deviceUUID'];
+//    if (uuid == null) {
+//      uuid = DateTime.now().millisecondsSinceEpoch.toString();
+//      storage['deviceUUID'] = uuid; // 保存
+//    }
+//    return uuid;
+//  } catch (e) {
+//    print('localStorage エラー: $e');
+//    return '';
+//  }
+//}

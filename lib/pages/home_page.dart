@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    String deviceId = getDeviceIDweb(); // デバイス ID を取得
+    String deviceId = getDeviceUUID() as String; // デバイス ID を取得
 
     try {
       final XFile? pickedFile =
