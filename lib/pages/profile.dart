@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,21 +19,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String deviceId = "";
   late Map<String, String> infoList = {};
   bool _isLoading = true;
+  //String now_username = "";
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
+    // 非同期処理を別メソッドに分離して呼び出す
     initializeProfile();
   }
 
   Future<void> initializeProfile() async {
-    deviceId = await getDeviceUUID();
-    infoList = await fetchInfo();
-    setState(() {
-      _nameController.text = infoList["name"] ?? "";
-      _dateController.text = infoList["startDay"] ?? "";
-      _isLoading = false; // 初期化完了！
-    });
+    try {
+      // デバイスIDを取得
+      deviceId = await getDeviceUUID();
+
+      // Firebaseからデータを取得
+      DocumentSnapshot<Map<String, dynamic>> snapshot =
+          await FirebaseFirestore.instance
+              .collection('users') // ユーザー情報を保存しているコレクション名
+              .doc(deviceId) // デバイスIDをドキュメントIDとして使用
+              .get();
+
+      if (snapshot.exists) {
+        // データが存在する場合
+        Map<String, dynamic>? data = snapshot.data();
+        setState(() {
+          //now_username = data?["name"] ?? ""; // 名前を設定
+          //_dateController.text = data?["target"] ?? ""; // 目標を設定
+          _isLoading = false; // ローディング完了
+        });
+      } else {
+        // データが存在しない場合
+        setState(() {
+          _isLoading = false; // ローディング完了
+        });
+      }
+    } catch (e) {
+      print("エラーが発生しました: $e");
+      setState(() {
+        _isLoading = false; // ローディング完了
+      });
+    }
   }
 
   // カメラを起動して画像を取得する
@@ -67,6 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 209, 209, 0),
@@ -120,7 +148,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: ElevatedButton.styleFrom(
                               shape: CircleBorder(), // ボタンを丸くする
                               padding: EdgeInsets.all(12), // ボタンのパディング
-                              backgroundColor: Colors.blue, // ボタンの色
+                              backgroundColor: const Color.fromARGB(
+                                  255, 209, 209, 0), // ボタンの色
                             ),
                             child:
                                 Icon(Icons.add, color: Colors.white), // プラスアイコン
@@ -132,10 +161,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(
                     height: 10,
                   ),
+                  Row(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text(
+                          'User Name',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 209, 209, 0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      //Text(
+                      //  now_username.isNotEmpty
+                      //      ? "Now: $now_username"
+                      //      : "Now: No username",
+                      //  style: TextStyle(
+                      //    fontSize: 12,
+                      //    fontWeight: FontWeight.bold,
+                      //    color: Color.fromARGB(255, 209, 209, 0),
+                      //  ),
+                      //)
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: TextField(
+                      controller: _nameController,
+                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your name',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                    ),
+                  ),
                   Padding(
                     padding: EdgeInsets.all(8),
                     child: Text(
-                      'User Name',
+                      'Your Target',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -150,9 +218,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       controller: _nameController,
                       style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
                       decoration: InputDecoration(
-                        hintText: 'Enter your name',
+                        hintText: '目標を入力してください',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
+                        prefixIcon: Icon(Icons.fitness_center),
                       ),
                     ),
                   ),
