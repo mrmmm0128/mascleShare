@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,13 +12,15 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _tergetController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   late Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
   late XFile? pickedFile = null; // nullで初期化
   String deviceId = "";
   late Map<String, String> infoList = {};
   bool _isLoading = true;
-  //String now_username = "";
+  String username = "";
+  String startDay = "";
 
   @override
   void initState() {
@@ -30,35 +31,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> initializeProfile() async {
     try {
-      // デバイスIDを取得
+      // 非同期処理を実行
       deviceId = await getDeviceUUID();
+      infoList = await fetchInfo();
 
-      // Firebaseからデータを取得
-      DocumentSnapshot<Map<String, dynamic>> snapshot =
-          await FirebaseFirestore.instance
-              .collection('users') // ユーザー情報を保存しているコレクション名
-              .doc(deviceId) // デバイスIDをドキュメントIDとして使用
-              .get();
-
-      if (snapshot.exists) {
-        // データが存在する場合
-        Map<String, dynamic>? data = snapshot.data();
-        setState(() {
-          //now_username = data?["name"] ?? ""; // 名前を設定
-          //_dateController.text = data?["target"] ?? ""; // 目標を設定
-          _isLoading = false; // ローディング完了
-        });
-      } else {
-        // データが存在しない場合
-        setState(() {
-          _isLoading = false; // ローディング完了
-        });
-      }
-    } catch (e) {
-      print("エラーが発生しました: $e");
+      // 非同期処理が完了したら状態を更新
       setState(() {
+        username = infoList["name"] ?? "";
+        startDay = infoList["startDay"] ?? "";
         _isLoading = false; // ローディング完了
       });
+    } catch (e) {
+      print("エラーが発生しました: $e");
     }
   }
 
@@ -94,7 +78,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 209, 209, 0),
@@ -174,17 +157,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      //Text(
-                      //  now_username.isNotEmpty
-                      //      ? "Now: $now_username"
-                      //      : "Now: No username",
-                      //  style: TextStyle(
-                      //    fontSize: 12,
-                      //    fontWeight: FontWeight.bold,
-                      //    color: Color.fromARGB(255, 209, 209, 0),
-                      //  ),
-                      //)
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text(
+                          "Now : $username",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 209, 209, 0),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   Padding(
@@ -215,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 10),
                     child: TextField(
-                      controller: _nameController,
+                      controller: _tergetController,
                       style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
                       decoration: InputDecoration(
                         hintText: '目標を入力してください',
@@ -224,16 +210,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'Start day',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
+                  Row(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text(
+                          'Start day',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 209, 209, 0),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text(
+                          "Now : $startDay",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 209, 209, 0),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(

@@ -12,6 +12,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
   late List<Map<String, String>> myWorkout = [];
   bool isLoading = true;
   String streek = "";
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +26,105 @@ class _WorkoutPageState extends State<WorkoutPage> {
       isLoading = false;
       streek = myWorkout.length.toString();
     });
+  }
+
+  void showPastMusclePhotos() {
+    // 現在の日付を取得
+    final now = DateTime.now();
+
+    // 1ヶ月前、3ヶ月前、半年前の日付を計算
+    final oneMonthAgo = now.subtract(Duration(days: 30));
+    final threeMonthsAgo = now.subtract(Duration(days: 90));
+    final sixMonthsAgo = now.subtract(Duration(days: 180));
+
+    // 各期間の写真をフィルタリング
+    final oneMonthPhoto = myWorkout.firstWhere(
+      (workout) => DateTime.parse(workout["day"] ?? "").isAfter(oneMonthAgo),
+      orElse: () => {},
+    );
+    final threeMonthsPhoto = myWorkout.firstWhere(
+      (workout) => DateTime.parse(workout["day"] ?? "").isAfter(threeMonthsAgo),
+      orElse: () => {},
+    );
+    final sixMonthsPhoto = myWorkout.firstWhere(
+      (workout) => DateTime.parse(workout["day"] ?? "").isAfter(sixMonthsAgo),
+      orElse: () => {},
+    );
+
+    // モーダルダイアログを表示
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.black,
+          title: const Text(
+            "Past Muscle Photos",
+            style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (oneMonthPhoto.isNotEmpty)
+                  buildPhotoTile("1 Month Ago", oneMonthPhoto["url"]),
+                if (threeMonthsPhoto.isNotEmpty)
+                  buildPhotoTile("3 Months Ago", threeMonthsPhoto["url"]),
+                if (sixMonthsPhoto.isNotEmpty)
+                  buildPhotoTile("6 Months Ago", sixMonthsPhoto["url"]),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                "Close",
+                style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget buildPhotoTile(String title, String? url) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Color.fromARGB(255, 209, 209, 0),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          height: 200,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey[200],
+          ),
+          child: url != null && url.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : const Icon(
+                  Icons.image_not_supported,
+                  size: 50,
+                  color: Colors.grey,
+                ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
   }
 
   @override
@@ -134,6 +234,24 @@ class _WorkoutPageState extends State<WorkoutPage> {
                         style: TextStyle(
                             color: Color.fromARGB(255, 209, 209, 0),
                             fontSize: 20)),
+                  ),
+
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 209, 209, 0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        showPastMusclePhotos();
+                      },
+                      child: const Text('show your past muscle',
+                          style: TextStyle(color: Colors.black, fontSize: 16)),
+                    ),
                   ),
 
                   // フォーカス情報
