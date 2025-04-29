@@ -23,16 +23,18 @@ Future<void> savePhotoWeb(
     );
 
     // 画像アップロードの処理
+    bool isPublic = true;
     String imageUrl = await uploadImageToStorageWeb(deviceId, photoBytes);
-
-    // その他の処理
     String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
     String uniqueKey = '${dateKey}_${DateTime.now().millisecondsSinceEpoch}';
-    Map<String, String?>? userInput = await showMascleSelection(context);
+    Map<String, String?>? userInput =
+        await showMascleSelection(context, isPublic);
     String icon = "";
     String name = "";
+    String bestRecord = "";
     String mascle = userInput!["mascle"]!;
     String caption = userInput["caption"]!;
+    String stringisPublic = userInput["isPublic"]!;
 
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
         .collection(deviceId)
@@ -44,6 +46,15 @@ Future<void> savePhotoWeb(
       if (data != null) {
         icon = data["photo"] ?? "";
         name = data["name"] ?? "";
+        if (mascle == "Chest") {
+          bestRecord = data["bench"];
+        }
+        if (mascle == "Back") {
+          bestRecord = data["dead"];
+        }
+        if (mascle == "Legs") {
+          bestRecord = data["squat"];
+        }
       }
     }
 
@@ -57,6 +68,7 @@ Future<void> savePhotoWeb(
         "day": dateKey,
         "name": name,
         "mascle": mascle,
+        "bestRecord": bestRecord,
       }
     }, SetOptions(merge: true));
 
@@ -69,6 +81,7 @@ Future<void> savePhotoWeb(
         "deviceId": deviceId,
         "name": name,
         "mascle": mascle,
+        "stringisPrivate": stringisPublic
       }
     }, SetOptions(merge: true));
 
@@ -95,15 +108,18 @@ Future<void> savePhotoMobile(
         );
       },
     );
+    bool isPublic = true;
     String imageUrl = await uploadImageToStorageMobile(deviceId, photoFile);
     String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    Map<String, String?>? userInput = await showMascleSelection(context);
+    Map<String, String?>? userInput =
+        await showMascleSelection(context, isPublic);
     String uniqueKey = '${dateKey}_${DateTime.now().millisecondsSinceEpoch}';
     String mascle = userInput!["mascle"]!;
     String caption = userInput["caption"]!;
-
+    String bestRecord = "";
     String icon = "";
     String name = "";
+    String stringisPublic = userInput["isPublic"]!;
 
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
         .collection(deviceId)
@@ -115,6 +131,15 @@ Future<void> savePhotoMobile(
       if (data != null) {
         icon = data["photo"] ?? "";
         name = data["name"] ?? "";
+        if (mascle == "Chest") {
+          bestRecord = data["bench"];
+        }
+        if (mascle == "Back") {
+          bestRecord = data["dead"];
+        }
+        if (mascle == "Legs") {
+          bestRecord = data["squat"];
+        }
       }
     }
 
@@ -127,7 +152,8 @@ Future<void> savePhotoMobile(
         "deviceId": deviceId,
         "day": dateKey,
         "name": name,
-        "mascle": mascle
+        "mascle": mascle,
+        "bestRecord": bestRecord
       }
     }, SetOptions(merge: true));
 
@@ -139,7 +165,8 @@ Future<void> savePhotoMobile(
         "icon": icon,
         "deviceId": deviceId,
         "name": name,
-        "mascle": mascle
+        "mascle": mascle,
+        "stringisPrivate": stringisPublic
       }
     }, SetOptions(merge: true));
 
@@ -188,104 +215,132 @@ Future<String> uploadImageToStorageMobile(String deviceId, XFile file) async {
 }
 
 // 入力ダイアログを表示する関数
-Future<Map<String, String?>?> showMascleSelection(BuildContext context) async {
-  String? selectedMascle;
-  String? caption;
+Future<Map<String, String?>?> showMascleSelection(
+    BuildContext context, bool initialIsPublic) async {
   List<String> mascleOptions = ["Chest", "Back", "Legs", "Arms"];
 
   return await showModalBottomSheet<Map<String, String?>>(
     context: context,
-    isScrollControlled: true, // キーボード対策
+    isScrollControlled: true,
     backgroundColor: Colors.grey[900],
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (context) {
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          left: 20,
-          right: 20,
-          top: 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "筋トレ情報を入力",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.yellow,
-              ),
+      String? selectedMascle;
+      String? caption;
+      bool isPublic = initialIsPublic;
+
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              left: 20,
+              right: 20,
+              top: 20,
             ),
-            SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: selectedMascle,
-              decoration: InputDecoration(
-                labelText: "部位を選択",
-                labelStyle: TextStyle(color: Colors.yellow),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.yellow),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.yellow, width: 2),
-                ),
-              ),
-              dropdownColor: Colors.grey[850],
-              style: TextStyle(color: Colors.white),
-              items: mascleOptions.map((String mascle) {
-                return DropdownMenuItem<String>(
-                  value: mascle,
-                  child: Text(mascle, style: TextStyle(color: Colors.white)),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                selectedMascle = newValue;
-              },
-            ),
-            SizedBox(height: 16),
-            TextFormField(
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: "キャプションを入力",
-                labelStyle: TextStyle(color: Colors.yellow),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.yellow),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.yellow, width: 2),
-                ),
-              ),
-              onChanged: (value) {
-                caption = value;
-              },
-            ),
-            SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton(
-                  child: Text("キャンセル", style: TextStyle(color: Colors.grey)),
-                  onPressed: () => Navigator.pop(context, null),
-                ),
-                SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.yellow,
+                Text(
+                  "筋トレ情報を入力",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.yellow,
                   ),
-                  onPressed: () {
-                    Navigator.pop(context, {
-                      "mascle": selectedMascle,
-                      "caption": caption,
+                ),
+                SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedMascle,
+                  decoration: InputDecoration(
+                    labelText: "部位を選択",
+                    labelStyle: TextStyle(color: Colors.yellow),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.yellow),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.yellow, width: 2),
+                    ),
+                  ),
+                  dropdownColor: Colors.grey[850],
+                  style: TextStyle(color: Colors.white),
+                  items: mascleOptions.map((String mascle) {
+                    return DropdownMenuItem<String>(
+                      value: mascle,
+                      child:
+                          Text(mascle, style: TextStyle(color: Colors.white)),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedMascle = newValue;
                     });
                   },
-                  child: Text("保存", style: TextStyle(color: Colors.black)),
                 ),
+                SizedBox(height: 16),
+                TextFormField(
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: "キャプションを入力",
+                    labelStyle: TextStyle(color: Colors.yellow),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.yellow),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.yellow, width: 2),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    caption = value;
+                  },
+                ),
+                SizedBox(height: 16),
+                CheckboxListTile(
+                  title: Text(
+                    "private",
+                    style: TextStyle(color: Colors.yellow),
+                  ),
+                  value: isPublic,
+                  activeColor: Colors.yellow,
+                  checkColor: Colors.black,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      isPublic = value ?? true;
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+                SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      child:
+                          Text("キャンセル", style: TextStyle(color: Colors.grey)),
+                      onPressed: () => Navigator.pop(context, null),
+                    ),
+                    SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellow,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context, {
+                          "mascle": selectedMascle,
+                          "caption": caption,
+                          "isPublic": isPublic.toString(),
+                        });
+                      },
+                      child: Text("保存", style: TextStyle(color: Colors.black)),
+                    ),
+                  ],
+                )
               ],
-            )
-          ],
-        ),
+            ),
+          );
+        },
       );
     },
   );

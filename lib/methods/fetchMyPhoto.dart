@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 
 Future<List<Map<String, String>>> fetchHistory() async {
-  String deviceId = getDeviceIDweb();
+  String deviceId = await getDeviceUUID();
   List<Map<String, String>> historyList = [];
 
   try {
@@ -19,7 +19,8 @@ Future<List<Map<String, String>>> fetchHistory() async {
             historyList.add({
               "url": value["photo"],
               "mascle": value["mascle"]?.toString() ?? "",
-              "day": value["day"]
+              "day": value["day"],
+              "bestRecord": value["bestRecord"]
             });
           }
         }

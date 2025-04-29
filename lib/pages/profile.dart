@@ -114,7 +114,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? Image.memory(imageBytes, fit: BoxFit.cover)
                               : (infoList["url"]!.isNotEmpty &&
                                       infoList["url"] != "")
-                                  ? Image.network(infoList["url"]!)
+                                  ? Image.network(infoList["url"]!,
+                                      fit: BoxFit.cover)
                                   : Icon(Icons.person,
                                       size: 100, color: Colors.grey),
                         ),
@@ -127,10 +128,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: ElevatedButton.styleFrom(
                               shape: CircleBorder(), // ボタンを丸くする
                               padding: EdgeInsets.all(12), // ボタンのパディング
-                              backgroundColor: Colors.blue, // ボタンの色
+                              backgroundColor:
+                                  Color.fromARGB(255, 209, 209, 0), // ボタンの色
                             ),
                             child:
-                                Icon(Icons.add, color: Colors.white), // プラスアイコン
+                                Icon(Icons.add, color: Colors.black), // プラスアイコン
                           ),
                         ),
                       ],

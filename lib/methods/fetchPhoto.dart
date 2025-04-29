@@ -27,6 +27,7 @@ Future<List<Map<String, Map<String, String>>>> fetchTodayphoto() async {
                 "icon": entry.value["icon"] ?? "",
                 "name": entry.value["name"] ?? "",
                 "deviceId": entry.value["deviceId"],
+                "isPrivate": entry.value["stringisPrivate"],
               }
             });
           }

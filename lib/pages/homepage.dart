@@ -69,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> fetchPhotos() async {
     originMatchingValues = [];
-    deviceId = getDeviceIDweb(); // デバイス ID を取得
+    deviceId = await getDeviceUUID(); // デバイス ID を取得
     List<Map<String, Map<String, String>>> photos = await fetchTodayphoto();
 
     for (var photo in photos) {
@@ -165,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         title: Center(
           child: Text(
-            'Mascle Share',
+            'Today',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
         ),
@@ -478,151 +478,168 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: const EdgeInsets.all(8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // ユーザーアイコン + 名前
-                              Row(
-                                children: [
-                                  photoList[index].values.first["icon"] != ""
-                                      ? ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          child: Material(
-                                            // ← Materialを挟むとタップ時にエフェクトも出せる
-                                            color: Colors.transparent,
-                                            child: InkWell(
-                                              onTap: () {
-                                                Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            otherProfileScreen(
-                                                                deviceId: photoList[
-                                                                            index]
-                                                                        .values
-                                                                        .first[
-                                                                    "deviceId"]!)));
-                                              },
-                                              child: Image.network(
-                                                photoList[index]
-                                                    .values
-                                                    .first["icon"]!,
-                                                width: 30,
-                                                height: 30,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          child: Material(
-                                            // ← Materialを挟むとタップ時にエフェクトも出せる
-                                            color: Colors.transparent,
-                                            child: InkWell(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        otherProfileScreen(
-                                                            deviceId: photoList[
-                                                                        index]
-                                                                    .values
-                                                                    .first[
-                                                                "deviceId"]!),
-                                                  ),
-                                                );
-                                              },
-                                              child: Icon(
-                                                Icons.person,
-                                                color: Color.fromARGB(
-                                                    255, 209, 209, 0),
-                                                size: 30,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    photoList[index].values.first["name"] != ""
-                                        ? photoList[index].values.first["name"]!
-                                        : 'Not defined',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Color.fromARGB(255, 209, 209, 0),
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              // 📸 画像 ＋ 💛エフェクト（リスト内に直書き）
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onDoubleTap: () => _onTap(index),
-                                    child: Stack(
-                                      alignment: Alignment.center,
+                          child: photoList[index].values.first["isPrivate"]! ==
+                                  "false"
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // ユーザーアイコン + 名前
+                                    Row(
                                       children: [
-                                        Ink.image(
-                                          image: CachedNetworkImageProvider(
-                                              photoList[index]
+                                        photoList[index].values.first["icon"] !=
+                                                ""
+                                            ? ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                child: Material(
+                                                  // ← Materialを挟むとタップ時にエフェクトも出せる
+                                                  color: Colors.transparent,
+                                                  child: InkWell(
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  otherProfileScreen(
+                                                                      deviceId: photoList[
+                                                                              index]
+                                                                          .values
+                                                                          .first["deviceId"]!)));
+                                                    },
+                                                    child: Image.network(
+                                                      photoList[index]
+                                                          .values
+                                                          .first["icon"]!,
+                                                      width: 30,
+                                                      height: 30,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            : ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                child: Material(
+                                                  // ← Materialを挟むとタップ時にエフェクトも出せる
+                                                  color: Colors.transparent,
+                                                  child: InkWell(
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              otherProfileScreen(
+                                                                  deviceId: photoList[
+                                                                              index]
+                                                                          .values
+                                                                          .first[
+                                                                      "deviceId"]!),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: Icon(
+                                                      Icons.person,
+                                                      color: Color.fromARGB(
+                                                          255, 209, 209, 0),
+                                                      size: 30,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          photoList[index]
+                                                      .values
+                                                      .first["name"] !=
+                                                  ""
+                                              ? photoList[index]
                                                   .values
-                                                  .first["url"]!),
-                                          width: double.infinity,
-                                          height: 500,
-                                          fit: BoxFit.cover,
-                                          child: Container(),
-                                        ),
-                                        if (showHearts[index])
-                                          ScaleTransition(
-                                            scale: scaleAnimations[index],
-                                            child: Icon(
-                                              Icons.favorite,
-                                              color: Colors.amber.shade600,
-                                              size: 100,
-                                              shadows: [
-                                                Shadow(
-                                                  blurRadius: 10,
-                                                  color: Colors.black
-                                                      .withOpacity(0.4),
-                                                  offset: const Offset(2, 4),
-                                                )
-                                              ],
-                                            ),
+                                                  .first["name"]!
+                                              : 'Not defined',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Color.fromARGB(
+                                                255, 209, 209, 0),
                                           ),
+                                        ),
                                       ],
                                     ),
-                                  ),
+
+                                    const SizedBox(height: 8),
+
+                                    // 📸 画像 ＋ 💛エフェクト（リスト内に直書き）
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(15),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onDoubleTap: () => _onTap(index),
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              Ink.image(
+                                                image:
+                                                    CachedNetworkImageProvider(
+                                                        photoList[index]
+                                                            .values
+                                                            .first["url"]!),
+                                                width: double.infinity,
+                                                height: 500,
+                                                fit: BoxFit.cover,
+                                                child: Container(),
+                                              ),
+                                              if (showHearts[index])
+                                                ScaleTransition(
+                                                  scale: scaleAnimations[index],
+                                                  child: Icon(
+                                                    Icons.favorite,
+                                                    color:
+                                                        Colors.amber.shade600,
+                                                    size: 100,
+                                                    shadows: [
+                                                      Shadow(
+                                                        blurRadius: 10,
+                                                        color: Colors.black
+                                                            .withOpacity(0.4),
+                                                        offset:
+                                                            const Offset(2, 4),
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 8),
+
+                                    // 📝 キャプション
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10),
+                                      child: Text(
+                                        photoList[index]
+                                                .values
+                                                .first['caption'] ??
+                                            '',
+                                        style: const TextStyle(
+                                          color:
+                                              Color.fromARGB(255, 209, 209, 0),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 8),
+                                  ],
+                                )
+                              : const SizedBox(
+                                  height: 0,
                                 ),
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              // 📝 キャプション
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                child: Text(
-                                  photoList[index].values.first['caption'] ??
-                                      '',
-                                  style: const TextStyle(
-                                    color: Color.fromARGB(255, 209, 209, 0),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 8),
-                            ],
-                          ),
                         );
                       },
                     ),

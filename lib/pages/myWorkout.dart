@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/fetchMyPhoto.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class WorkoutPage extends StatefulWidget {
   const WorkoutPage({super.key});
@@ -15,6 +16,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
   bool isLoading = true;
   String streek = "";
   String selectedCategory = 'All';
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _dayKeys = {}; // "2024-04-29": GlobalKey()
 
   @override
   void initState() {
@@ -31,18 +34,281 @@ class _WorkoutPageState extends State<WorkoutPage> {
     });
   }
 
+  void _jumpToDate(String dateStr) {
+    final key = _dayKeys[dateStr];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 300),
+      );
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
+  void _showCalendarDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          // AlertDialog → Dialog に変更
+          backgroundColor: Colors.black,
+          child: SizedBox(
+            height: 450, // 明示的に高さと幅を指定
+            width: 350,
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Text(
+                    "Select a Date",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+                Expanded(
+                  child: TableCalendar(
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    focusedDay: DateTime.now(),
+                    calendarFormat: CalendarFormat.month,
+                    eventLoader: (day) {
+                      final formatted = _formatDate(day);
+                      return myWorkout
+                          .where((w) => w["day"] == formatted)
+                          .toList();
+                    },
+                    calendarStyle: CalendarStyle(
+                      defaultTextStyle:
+                          const TextStyle(color: Colors.white), // ← 普通の日
+                      weekendTextStyle:
+                          const TextStyle(color: Colors.white70), // ← 土日
+                      outsideTextStyle:
+                          const TextStyle(color: Colors.grey), // ← 前月・次月の日付
+                      selectedDecoration: const BoxDecoration(
+                        color: Color.fromARGB(255, 209, 209, 0), // 黄色で選択
+                        shape: BoxShape.circle,
+                      ),
+                      todayDecoration: BoxDecoration(
+                        color: Colors.white24,
+                        shape: BoxShape.circle,
+                      ),
+                      markersMaxCount: 3,
+                      markerDecoration: BoxDecoration(
+                        color: Colors.yellow.shade700,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    headerStyle: const HeaderStyle(
+                      titleTextStyle: TextStyle(color: Colors.white),
+                      formatButtonTextStyle: TextStyle(color: Colors.white),
+                      formatButtonDecoration: BoxDecoration(
+                        color: Color.fromARGB(255, 209, 209, 0),
+                        borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                      ),
+                      leftChevronIcon:
+                          Icon(Icons.chevron_left, color: Colors.white),
+                      rightChevronIcon:
+                          Icon(Icons.chevron_right, color: Colors.white),
+                    ),
+                    calendarBuilders: CalendarBuilders(
+                      defaultBuilder: (context, day, focusedDay) {
+                        final formatted = _formatDate(day);
+                        final hasWorkout =
+                            myWorkout.any((w) => w["day"] == formatted);
+                        return Container(
+                          alignment: Alignment.center,
+                          margin: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${day.day}',
+                            style: TextStyle(
+                              color:
+                                  hasWorkout ? Colors.yellow : Colors.white60,
+                              fontWeight: hasWorkout
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    onDaySelected: (selectedDay, _) {
+                      Navigator.pop(context);
+                      _jumpToDate(_formatDate(selectedDay));
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void showPastMusclePhotos() {
+    // 現在の日付を取得
+    final now = DateTime.now();
+
+    // 1ヶ月前、3ヶ月前、半年前の日付を計算
+    final oneMonthAgo = now.subtract(Duration(days: 30));
+    final threeMonthsAgo = now.subtract(Duration(days: 90));
+    final sixMonthsAgo = now.subtract(Duration(days: 180));
+
+    // 各期間の写真をフィルタリング
+
+    final oneMonthPhoto = myWorkout.firstWhere(
+      (workout) => DateTime.parse(workout["day"] ?? "").isAfter(oneMonthAgo),
+    );
+
+    final threeMonthsPhoto = myWorkout.firstWhere(
+      (workout) => DateTime.parse(workout["day"] ?? "").isAfter(threeMonthsAgo),
+    );
+
+    final sixMonthsPhoto = myWorkout.firstWhere(
+      (workout) => DateTime.parse(workout["day"] ?? "").isAfter(sixMonthsAgo),
+    );
+
+    // モーダルダイアログを表示
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.black,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Past Workout Records",
+                style: TextStyle(
+                  color: Color.fromARGB(255, 209, 209, 0),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.calendar_today,
+                    color: Color.fromARGB(255, 209, 209, 0)),
+                onPressed: () => _showCalendarDialog(context),
+              )
+            ],
+          ),
+          content: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: myWorkout.map((record) {
+                final dateKey = record["day"];
+                final key = GlobalKey();
+                _dayKeys[dateKey!] = key;
+
+                return Padding(
+                  key: key,
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      record["url"] != null && record["url"]!.isNotEmpty
+                          ? Image.network(record["url"]!)
+                          : Container(
+                              height: 150,
+                              width: double.infinity,
+                              color: Colors.grey.shade800,
+                              alignment: Alignment.center,
+                              child: const Text("No image",
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                      const SizedBox(height: 4),
+                      Text(
+                        record["mascle"] == "Chest"
+                            ? "Bench press: ${record["bestRecord"] ?? 'N/A'}"
+                            : record["mascle"] == "Back"
+                                ? "Deadlift: ${record["bestRecord"] ?? 'N/A'}"
+                                : "Squat: ${record["bestRecord"] ?? 'N/A'}",
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        "Date: ${record["day"] ?? 'Unknown'}",
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      const Divider(color: Colors.grey),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                "Close",
+                style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget buildPhotoTile(String title, String? url) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Color.fromARGB(255, 209, 209, 0),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          height: 200,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey[200],
+          ),
+          child: url != null && url.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : const Icon(
+                  Icons.image_not_supported,
+                  size: 50,
+                  color: Colors.grey,
+                ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   void changeCategry(String newCategoly) {
     if (newCategoly == "All") {
       myWorkout = originMyWorkout;
     } else {
       myWorkout =
           originMyWorkout.where((map) => map["mascle"] == newCategoly).toList();
+      streek = myWorkout.length.toString();
 
       if (myWorkout.isEmpty) {
         myWorkout = [
           {"url": "", "name": "", "startDay": ""}
         ];
       }
+
       print(myWorkout);
     }
   }
@@ -157,8 +423,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
 
                             // メイン写真とStreek
                             Container(
-                                width: 220, // 好きな幅
-                                height: 300, // 縦長
+                                width: 200, // 好きな幅
+                                height: 270, // 縦長
                                 decoration: BoxDecoration(
                                   borderRadius:
                                       BorderRadius.circular(20), // 角を丸く
@@ -179,7 +445,6 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                       )),
                           ],
                         ),
-
                         const SizedBox(width: 20),
                         // Streek情報
                         Expanded(
@@ -229,6 +494,23 @@ class _WorkoutPageState extends State<WorkoutPage> {
                   ),
 
                   const SizedBox(height: 8),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 209, 209, 0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        showPastMusclePhotos();
+                      },
+                      child: const Text('show your past muscle',
+                          style: TextStyle(color: Colors.black, fontSize: 16)),
+                    ),
+                  ),
 
                   // 過去の写真3つ
 
