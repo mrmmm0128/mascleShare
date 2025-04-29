@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/fetchPhoto.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/methods/savaData.dart';
+import 'package:muscle_share/methods/updatephotoInfo.dart';
 import 'package:muscle_share/pages/myWorkout.dart';
+import 'package:muscle_share/pages/otherProfile.dart';
 import 'package:muscle_share/pages/profile.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -14,41 +16,74 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  List<Map<String, String>> originPhotoList = [];
-  List<Map<String, String>> photoList = [];
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  List<Map<String, Map<String, String>>> originPhotoList = [];
+  List<Map<String, Map<String, String>>> photoList = [];
 
   String selectedCategory = 'All';
   String deviceId = "";
   bool isPrivateMode = true;
   final List<String> categories = ['All', 'Chest', 'Back', 'Legs', 'Arms'];
-  List<Map<String, String>> originMatchingValues = [];
-  List<Map<String, String>> matchingValues = [];
+  List<Map<String, Map<String, String>>> originMatchingValues = [];
+  List<Map<String, Map<String, String>>> matchingValues = [];
+  late List<bool> showHearts;
+  late List<AnimationController> controllers;
+  late List<Animation<double>> scaleAnimations;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchPhotos();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    await fetchPhotos();
+    final length = photoList.length;
+    showHearts = List.generate(length, (_) => false);
+    controllers = List.generate(length, (i) {
+      final controller = AnimationController(
+        duration: const Duration(milliseconds: 400),
+        vsync: this,
+      );
+      controller.addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          Future.delayed(const Duration(milliseconds: 400), () {
+            if (mounted) {
+              setState(() => showHearts[i] = false);
+              controller.reset();
+            }
+          });
+        }
+        print(controllers);
+      });
+      return controller;
+    });
+
+    scaleAnimations = controllers.map((controller) {
+      return Tween<double>(begin: 0.0, end: 1.4).animate(
+        CurvedAnimation(parent: controller, curve: Curves.elasticOut),
+      );
+    }).toList();
   }
 
   Future<void> fetchPhotos() async {
     originMatchingValues = [];
-    deviceId = await getDeviceUUID(); // デバイス ID を取得
-    List<Map<String, String>> photos = await fetchTodayphoto();
+    deviceId = getDeviceIDweb(); // デバイス ID を取得
+    List<Map<String, Map<String, String>>> photos = await fetchTodayphoto();
 
     for (var photo in photos) {
-      if (photo["deviceId"] == deviceId &&
-          !originMatchingValues
-              .any((element) => element["url"] == photo["url"])) {
+      if (photo.values.first["deviceId"] == deviceId &&
+          !originMatchingValues.any((element) =>
+              element.values.first["url"] == photo.values.first["url"])) {
         originMatchingValues.add(photo);
       }
     }
 
-    print(originMatchingValues);
-
     setState(() {
       originPhotoList = photoList = photos;
       matchingValues = originMatchingValues;
+      selectedCategory = "All";
     });
   }
 
@@ -57,10 +92,11 @@ class _HomeScreenState extends State<HomeScreen> {
       photoList = originPhotoList;
       matchingValues = originMatchingValues;
     } else {
-      photoList =
-          originPhotoList.where((map) => map["mascle"] == newCategoly).toList();
+      photoList = originPhotoList
+          .where((map) => map.values.first["mascle"] == newCategoly)
+          .toList();
       matchingValues = originMatchingValues
-          .where((map) => map["mascle"] == newCategoly)
+          .where((map) => map.values.first["mascle"] == newCategoly)
           .toList();
     }
   }
@@ -78,9 +114,9 @@ class _HomeScreenState extends State<HomeScreen> {
           // 🌍 Web の場合 → Uint8List に変換
           try {
             Uint8List imageBytes = await pickedFile.readAsBytes();
-            await savePhotoWeb(imageBytes, deviceId);
+            await savePhotoWeb(context, imageBytes, deviceId);
             setState(() {
-              fetchPhotos();
+              initialize();
             });
 
             print("成功しました。");
@@ -89,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         } else {
           // 📱 iOS / Android の場合 → XFile をそのまま使う
-          await savePhotoMobile(pickedFile, deviceId);
+          await savePhotoMobile(context, pickedFile, deviceId);
         }
       } else {
         print("❌ No image selected.");
@@ -97,6 +133,19 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       print("❌ エラーが発生しました: $e");
     }
+  }
+
+  @override
+  void dispose() {
+    for (final c in controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onTap(int index) {
+    setState(() => showHearts[index] = true);
+    controllers[index].forward();
   }
 
   @override
@@ -254,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
           isPrivateMode
               ? Expanded(
                   child: RefreshIndicator(
-                    onRefresh: fetchPhotos, // 👈 引っ張ったときに実行される関数
+                    onRefresh: initialize, // 👈 引っ張ったときに実行される関数
                     color: Color.fromARGB(255, 209, 209, 0), // インジケーターの色（任意）
                     backgroundColor: Colors.black, // 背景色（任意）
                     child: ListView.builder(
@@ -268,12 +317,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Row(
                                 children: [
-                                  matchingValues[index]["icon"] != ""
+                                  matchingValues[index].values.first["icon"] !=
+                                          ""
                                       ? ClipRRect(
                                           borderRadius: BorderRadius.circular(
                                               20), // 丸みをつけたい場合
                                           child: Image.network(
-                                            matchingValues[index]["icon"]!,
+                                            matchingValues[index]
+                                                .values
+                                                .first["icon"]!,
                                             width: 30,
                                             height: 30,
                                             fit: BoxFit.cover,
@@ -287,13 +339,81 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    matchingValues[index]["name"] != ""
-                                        ? matchingValues[index]["name"]!
+                                    matchingValues[index]
+                                                .values
+                                                .first["name"] !=
+                                            ""
+                                        ? matchingValues[index]
+                                            .values
+                                            .first["name"]!
                                         : 'Not defined',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Color.fromARGB(255, 209, 209, 0),
                                     ),
+                                  ),
+                                  Spacer(),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.more_vert,
+                                      color: Color.fromARGB(255, 209, 209, 0),
+                                    ),
+                                    onPressed: () async {
+                                      // モーダルで編集・削除の選択肢を表示
+                                      showModalBottomSheet(
+                                        context: context,
+                                        backgroundColor:
+                                            Colors.grey[900], // ダーク系背景
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(20)),
+                                        ),
+                                        builder: (BuildContext context) {
+                                          return Padding(
+                                            padding: const EdgeInsets.all(20.0),
+                                            child: Wrap(
+                                              children: [
+                                                ListTile(
+                                                  leading: Icon(Icons.edit,
+                                                      color: Colors.yellow),
+                                                  title: Text('編集',
+                                                      style: TextStyle(
+                                                          color: Colors.white)),
+                                                  onTap: () async {
+                                                    Navigator.pop(
+                                                        context); // モーダルを閉じる
+
+                                                    await updatePhotoInfo(
+                                                        context,
+                                                        matchingValues[index]
+                                                            .keys
+                                                            .first);
+                                                    await initialize();
+                                                  },
+                                                ),
+                                                ListTile(
+                                                  leading: Icon(Icons.delete,
+                                                      color: Colors.red),
+                                                  title: Text('削除',
+                                                      style: TextStyle(
+                                                          color: Colors.white)),
+                                                  onTap: () async {
+                                                    Navigator.pop(
+                                                        context); // モーダルを閉じる
+
+                                                    await deletePhoto(
+                                                        matchingValues[index]
+                                                            .keys
+                                                            .first);
+                                                    await initialize();
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
@@ -303,7 +423,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 borderRadius:
                                     BorderRadius.circular(15), // 画像の角を丸める
                                 child: CachedNetworkImage(
-                                  imageUrl: matchingValues[index]["url"]!,
+                                  imageUrl: matchingValues[index]
+                                      .values
+                                      .first["url"]!,
                                   width: double.infinity,
                                   height: 500,
                                   fit: BoxFit.cover,
@@ -327,7 +449,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 10),
                                 child: Text(
-                                  matchingValues[index]['caption']!,
+                                  matchingValues[index]
+                                      .values
+                                      .first['caption']!,
                                   style: TextStyle(
                                       color: const Color.fromARGB(
                                           255, 209, 209, 0),
@@ -345,41 +469,86 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               : Expanded(
                   child: RefreshIndicator(
-                    onRefresh: fetchPhotos, // 👈 引っ張ったときに実行される関数
+                    onRefresh: initialize, // 👈 引っ張ったときに実行される関数
                     color: Color.fromARGB(255, 209, 209, 0), // インジケーターの色（任意）
                     backgroundColor: Colors.black, // 背景色（任意）
                     child: ListView.builder(
-                      padding: EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(10),
                       itemCount: photoList.length,
                       itemBuilder: (context, index) {
                         return Padding(
-                          padding: EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(8),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // ユーザーアイコン + 名前
                               Row(
                                 children: [
-                                  photoList[index]["icon"] != ""
+                                  photoList[index].values.first["icon"] != ""
                                       ? ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                              20), // 丸みをつけたい場合
-                                          child: Image.network(
-                                            photoList[index]["icon"]!,
-                                            width: 30,
-                                            height: 30,
-                                            fit: BoxFit.cover,
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          child: Material(
+                                            // ← Materialを挟むとタップ時にエフェクトも出せる
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              onTap: () {
+                                                Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            otherProfileScreen(
+                                                                deviceId: photoList[
+                                                                            index]
+                                                                        .values
+                                                                        .first[
+                                                                    "deviceId"]!)));
+                                              },
+                                              child: Image.network(
+                                                photoList[index]
+                                                    .values
+                                                    .first["icon"]!,
+                                                width: 30,
+                                                height: 30,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
                                           ),
                                         )
-                                      : Icon(
-                                          Icons.person,
-                                          color: const Color.fromARGB(
-                                              255, 209, 209, 0),
-                                          size: 30,
+                                      : ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          child: Material(
+                                            // ← Materialを挟むとタップ時にエフェクトも出せる
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        otherProfileScreen(
+                                                            deviceId: photoList[
+                                                                        index]
+                                                                    .values
+                                                                    .first[
+                                                                "deviceId"]!),
+                                                  ),
+                                                );
+                                              },
+                                              child: Icon(
+                                                Icons.person,
+                                                color: Color.fromARGB(
+                                                    255, 209, 209, 0),
+                                                size: 30,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    photoList[index]["name"] != ""
-                                        ? photoList[index]["name"]!
+                                    photoList[index].values.first["name"] != ""
+                                        ? photoList[index].values.first["name"]!
                                         : 'Not defined',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -390,43 +559,68 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
 
                               const SizedBox(height: 8),
+
+                              // 📸 画像 ＋ 💛エフェクト（リスト内に直書き）
                               ClipRRect(
-                                borderRadius:
-                                    BorderRadius.circular(15), // 画像の角を丸める
-                                child: CachedNetworkImage(
-                                  imageUrl: photoList[index]["url"]!,
-                                  width: double.infinity,
-                                  height: 500,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => Center(
-                                      child: CircularProgressIndicator()),
-                                  errorWidget: (context, url, error) {
-                                    print("⚠️ 画像の読み込みエラー: $error");
-                                    return Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                borderRadius: BorderRadius.circular(15),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onDoubleTap: () => _onTap(index),
+                                    child: Stack(
+                                      alignment: Alignment.center,
                                       children: [
-                                        Icon(Icons.error,
-                                            size: 50, color: Colors.red),
-                                        Text("画像を取得できませんでした"),
+                                        Ink.image(
+                                          image: CachedNetworkImageProvider(
+                                              photoList[index]
+                                                  .values
+                                                  .first["url"]!),
+                                          width: double.infinity,
+                                          height: 500,
+                                          fit: BoxFit.cover,
+                                          child: Container(),
+                                        ),
+                                        if (showHearts[index])
+                                          ScaleTransition(
+                                            scale: scaleAnimations[index],
+                                            child: Icon(
+                                              Icons.favorite,
+                                              color: Colors.amber.shade600,
+                                              size: 100,
+                                              shadows: [
+                                                Shadow(
+                                                  blurRadius: 10,
+                                                  color: Colors.black
+                                                      .withOpacity(0.4),
+                                                  offset: const Offset(2, 4),
+                                                )
+                                              ],
+                                            ),
+                                          ),
                                       ],
-                                    );
-                                  },
+                                    ),
+                                  ),
                                 ),
                               ),
-                              SizedBox(height: 8), // 画像とキャプションの間隔
+
+                              const SizedBox(height: 8),
+
+                              // 📝 キャプション
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 10),
                                 child: Text(
-                                  photoList[index]['caption']!,
-                                  style: TextStyle(
-                                      color: const Color.fromARGB(
-                                          255, 209, 209, 0),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold),
+                                  photoList[index].values.first['caption'] ??
+                                      '',
+                                  style: const TextStyle(
+                                    color: Color.fromARGB(255, 209, 209, 0),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                              SizedBox(height: 8), // キャプションと次の画像の間隔
+
+                              const SizedBox(height: 8),
                             ],
                           ),
                         );

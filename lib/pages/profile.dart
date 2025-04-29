@@ -1,3 +1,4 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,6 +13,9 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _benchController = TextEditingController();
+  final TextEditingController _deadController = TextEditingController();
+  final TextEditingController _squatController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   late Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
   late XFile? pickedFile = null; // nullで初期化
@@ -26,11 +30,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> initializeProfile() async {
-    deviceId = await getDeviceUUID();
+    deviceId = getDeviceIDweb();
     infoList = await fetchInfo();
     setState(() {
       _nameController.text = infoList["name"] ?? "";
       _dateController.text = infoList["startDay"] ?? "";
+      _benchController.text = infoList["bench"] ?? "";
+      _deadController.text = infoList["dead"] ?? "";
+      _squatController.text = infoList["squat"] ?? "";
       _isLoading = false; // 初期化完了！
     });
   }
@@ -38,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    deviceId = await getDeviceUUID(); // デバイス ID を取得
+    deviceId = getDeviceIDweb(); // デバイス ID を取得
 
     try {
       pickedFile = await picker.pickImage(source: ImageSource.camera);
@@ -137,7 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Text(
                       'User Name',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Color.fromARGB(255, 209, 209, 0),
                       ),
@@ -161,7 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Text(
                       'Start day',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Color.fromARGB(255, 209, 209, 0),
                       ),
@@ -198,14 +205,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'Best records',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 209, 209, 0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'bench press',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 209, 209, 0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _benchController,
+                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your best records of bench press',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'deadlift',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 209, 209, 0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _deadController,
+                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your best records of deadlift',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'squat',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 209, 209, 0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _squatController,
+                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your best records of squat',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Center(
                     child: Padding(
-                      padding: EdgeInsets.all(8),
+                      padding: EdgeInsets.all(12),
                       child: ElevatedButton(
                         onPressed: () async {
-                          saveInfoWeb(_nameController.text,
-                              _dateController.text, deviceId, imageBytes);
+                          saveInfoWeb(
+                              _nameController.text,
+                              _dateController.text,
+                              deviceId,
+                              imageBytes,
+                              _benchController.text,
+                              _deadController.text,
+                              _squatController.text);
                         },
                         style: ButtonStyle(
                           backgroundColor:

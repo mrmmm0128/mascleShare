@@ -10,8 +10,12 @@ class WorkoutPage extends StatefulWidget {
 
 class _WorkoutPageState extends State<WorkoutPage> {
   late List<Map<String, String>> myWorkout = [];
+  late List<Map<String, String>> originMyWorkout = [];
+  final List<String> categories = ['All', 'Chest', 'Back', 'Legs', 'Arms'];
   bool isLoading = true;
   String streek = "";
+  String selectedCategory = 'All';
+
   @override
   void initState() {
     super.initState();
@@ -19,12 +23,28 @@ class _WorkoutPageState extends State<WorkoutPage> {
   }
 
   void initializeList() async {
-    myWorkout = await fetchHistory();
+    myWorkout = originMyWorkout = await fetchHistory();
     print(myWorkout);
     setState(() {
       isLoading = false;
       streek = myWorkout.length.toString();
     });
+  }
+
+  void changeCategry(String newCategoly) {
+    if (newCategoly == "All") {
+      myWorkout = originMyWorkout;
+    } else {
+      myWorkout =
+          originMyWorkout.where((map) => map["mascle"] == newCategoly).toList();
+
+      if (myWorkout.isEmpty) {
+        myWorkout = [
+          {"url": "", "name": "", "startDay": ""}
+        ];
+      }
+      print(myWorkout);
+    }
   }
 
   @override
@@ -49,6 +69,57 @@ class _WorkoutPageState extends State<WorkoutPage> {
           : SingleChildScrollView(
               child: Column(
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding:
+                            EdgeInsets.symmetric(vertical: 9, horizontal: 9),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(12),
+                            border:
+                                Border.all(color: Colors.grey.withOpacity(0.3)),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 5),
+                            child: DropdownButton<String>(
+                              value: selectedCategory,
+                              dropdownColor: Colors.black,
+                              borderRadius: BorderRadius.circular(12),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  selectedCategory = newValue!;
+                                  changeCategry(selectedCategory);
+                                });
+                              },
+                              underline: SizedBox(),
+                              icon: Icon(Icons.arrow_drop_down,
+                                  color: Color.fromARGB(
+                                      255, 209, 209, 0)), // 👈 アイコンの色を黄色に
+                              isDense: true,
+                              items: categories.map<DropdownMenuItem<String>>(
+                                  (String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Center(
+                                    child: Text(
+                                      value,
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 209, 209, 0),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
@@ -66,6 +137,23 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                     fontSize: 25),
                               ),
                             ),
+                            Padding(
+                                padding: EdgeInsets.all(9),
+                                child: myWorkout[0]["mascle"] != ""
+                                    ? Text(
+                                        myWorkout[0]["mascle"] ?? "",
+                                        style: TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 209, 209, 0),
+                                            fontSize: 14),
+                                      )
+                                    : Text(
+                                        "",
+                                        style: TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 209, 209, 0),
+                                            fontSize: 14),
+                                      )),
 
                             // メイン写真とStreek
                             Container(
@@ -95,33 +183,37 @@ class _WorkoutPageState extends State<WorkoutPage> {
                         const SizedBox(width: 20),
                         // Streek情報
                         Expanded(
-                            child: Center(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Text("Your Streek",
-                                  style: TextStyle(
-                                      color: Color.fromARGB(255, 209, 209, 0),
-                                      fontSize: 20)),
-                              const SizedBox(height: 10),
-                              myWorkout[0]["url"] != ""
-                                  ? Text(
-                                      streek,
-                                      style: TextStyle(
-                                        fontSize: 64,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Text("Total training",
+                                    style: TextStyle(
                                         color: Color.fromARGB(255, 209, 209, 0),
-                                      ),
-                                    )
-                                  : Text(
-                                      "0",
-                                      style: TextStyle(
-                                        fontSize: 64,
-                                        color: Color.fromARGB(255, 209, 209, 0),
-                                      ),
-                                    )
-                            ],
+                                        fontSize: 20)),
+                                const SizedBox(height: 10),
+                                myWorkout[0]["url"] != ""
+                                    ? Text(
+                                        streek,
+                                        style: TextStyle(
+                                          fontSize: 64,
+                                          color:
+                                              Color.fromARGB(255, 209, 209, 0),
+                                        ),
+                                      )
+                                    : Text(
+                                        "0",
+                                        style: TextStyle(
+                                          fontSize: 64,
+                                          color:
+                                              Color.fromARGB(255, 209, 209, 0),
+                                        ),
+                                      )
+                              ],
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
@@ -134,15 +226,6 @@ class _WorkoutPageState extends State<WorkoutPage> {
                         style: TextStyle(
                             color: Color.fromARGB(255, 209, 209, 0),
                             fontSize: 20)),
-                  ),
-
-                  // フォーカス情報
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text("You focused for chest training",
-                        style: TextStyle(
-                            color: Color.fromARGB(255, 209, 209, 0),
-                            fontSize: 16)),
                   ),
 
                   const SizedBox(height: 8),
@@ -171,6 +254,14 @@ class _WorkoutPageState extends State<WorkoutPage> {
                           children: [
                             Text(
                               workout["day"] ?? "",
+                              style: const TextStyle(
+                                color: Color.fromARGB(255, 209, 209, 0),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              workout["mascle"] ?? "",
                               style: const TextStyle(
                                 color: Color.fromARGB(255, 209, 209, 0),
                                 fontSize: 12,

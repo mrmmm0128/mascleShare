@@ -1,31 +1,77 @@
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:intl/intl.dart';
 
-Future<void> saveInfoWeb(
-    String name, String startDay, String deviceId, Uint8List photoBytes) async {
+Future<void> saveInfoWeb(String name, String startDay, String deviceId,
+    Uint8List photoBytes, String bench, String dead, String squat) async {
   try {
     String imageUrl = "";
+    String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    final memoryRef =
+        FirebaseFirestore.instance.collection(dateKey).doc("memory");
+
+    final memorySnapshot = await memoryRef.get();
+    Map<String, dynamic> memoryData = memorySnapshot.data() ?? {};
+
     if (photoBytes.isNotEmpty) {
       imageUrl = await uploadProfileImageToStorageWeb(deviceId, photoBytes);
-      await FirebaseFirestore.instance
-          .collection(deviceId)
-          .doc("profile")
-          .set({"photo": imageUrl, "startDay": startDay, "name": name});
+      await FirebaseFirestore.instance.collection(deviceId).doc("profile").set({
+        "photo": imageUrl,
+        "startDay": startDay,
+        "name": name,
+        "bench": bench,
+        "dead": dead,
+        "squat": squat
+      });
+
+      memoryData.forEach((key, value) {
+        if (value is Map<String, dynamic> && value["deviceId"] == deviceId) {
+          // deviceId が一致するフィールドの "icon" と "name" を更新
+          String uniqueKey = key;
+          print(key);
+          Map<String, dynamic> updatedEntry = Map<String, dynamic>.from(value);
+          updatedEntry["icon"] = imageUrl;
+          updatedEntry["name"] = name;
+
+          memoryRef.set({uniqueKey: updatedEntry}, SetOptions(merge: true));
+        }
+      });
     } else {
       final docRef =
           FirebaseFirestore.instance.collection(deviceId).doc("profile");
 
-// ドキュメントが存在するかどうか確認
       final docSnapshot = await docRef.get();
 
       if (docSnapshot.exists) {
         // ドキュメントが存在する場合はupdate
-        await docRef.update({"startDay": startDay, "name": name});
+        await docRef.update({
+          "startDay": startDay,
+          "name": name,
+          "bench": bench,
+          "dead": dead,
+          "squat": squat
+        });
       } else {
         // ドキュメントが存在しない場合はset
-        await docRef.set({"startDay": startDay, "name": name});
+        await docRef.set({
+          "startDay": startDay,
+          "name": name,
+          "bench": bench,
+          "dead": dead,
+          "squat": squat
+        });
       }
+      memoryData.forEach((key, value) {
+        if (value is Map<String, dynamic> && value["deviceId"] == deviceId) {
+          String uniqueKey = key;
+          print(key);
+          Map<String, dynamic> updatedEntry = Map<String, dynamic>.from(value);
+          updatedEntry["name"] = name;
+          memoryRef.set({uniqueKey: updatedEntry}, SetOptions(merge: true));
+        }
+      });
     }
     print(imageUrl);
 

@@ -8,7 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:muscle_share/main.dart';
 
 // 🔹 Firestore に画像を保存 (Web 用)
-Future<void> savePhotoWeb(Uint8List photoBytes, String deviceId) async {
+Future<void> savePhotoWeb(
+    BuildContext context, Uint8List photoBytes, String deviceId) async {
   try {
     // ローディングインジケーターを表示
     showDialog(
@@ -27,11 +28,82 @@ Future<void> savePhotoWeb(Uint8List photoBytes, String deviceId) async {
     // その他の処理
     String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
     String uniqueKey = '${dateKey}_${DateTime.now().millisecondsSinceEpoch}';
-    Map<String, String?>? userInput = await showMascleSelectionDialog();
+    Map<String, String?>? userInput = await showMascleSelection(context);
     String icon = "";
     String name = "";
     String mascle = userInput!["mascle"]!;
     String caption = userInput["caption"]!;
+
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection(deviceId)
+        .doc("profile")
+        .get();
+
+    if (snapshot.exists) {
+      Map<String, dynamic>? data = snapshot.data() as Map<String, dynamic>?;
+      if (data != null) {
+        icon = data["photo"] ?? "";
+        name = data["name"] ?? "";
+      }
+    }
+
+    await FirebaseFirestore.instance.collection(deviceId).doc("info").set({
+      uniqueKey: {
+        "photo": imageUrl,
+        "caption": caption,
+        "comment": "",
+        "icon": icon,
+        "deviceId": deviceId,
+        "day": dateKey,
+        "name": name,
+        "mascle": mascle,
+      }
+    }, SetOptions(merge: true));
+
+    await FirebaseFirestore.instance.collection(dateKey).doc("memory").set({
+      uniqueKey: {
+        "photo": imageUrl,
+        "caption": caption,
+        "comment": "",
+        "icon": icon,
+        "deviceId": deviceId,
+        "name": name,
+        "mascle": mascle,
+      }
+    }, SetOptions(merge: true));
+
+    print("✅ Web: 画像を Firestore に保存しました！");
+  } catch (e) {
+    print("❌ Web: Firestore への保存に失敗しました: $e");
+  } finally {
+    // ローディングインジケーターを閉じる
+    Navigator.of(navigatorKey.currentContext!).pop();
+  }
+}
+
+// 🔹 Firestore に画像を保存 (iOS / Android 用)
+Future<void> savePhotoMobile(
+    BuildContext context, XFile photoFile, String deviceId) async {
+  try {
+    // ローディングインジケーターを表示
+    showDialog(
+      context: navigatorKey.currentContext!,
+      barrierDismissible: false, // ダイアログ外をタップしても閉じない
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(), // ローディングインジケーター
+        );
+      },
+    );
+    String imageUrl = await uploadImageToStorageMobile(deviceId, photoFile);
+    String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    Map<String, String?>? userInput = await showMascleSelection(context);
+    String uniqueKey = '${dateKey}_${DateTime.now().millisecondsSinceEpoch}';
+    String mascle = userInput!["mascle"]!;
+    String caption = userInput["caption"]!;
+
+    String icon = "";
+    String name = "";
 
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
         .collection(deviceId)
@@ -80,62 +152,6 @@ Future<void> savePhotoWeb(Uint8List photoBytes, String deviceId) async {
   }
 }
 
-// 🔹 Firestore に画像を保存 (iOS / Android 用)
-Future<void> savePhotoMobile(XFile photoFile, String deviceId) async {
-  try {
-    String imageUrl = await uploadImageToStorageMobile(deviceId, photoFile);
-    String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    Map<String, String?>? userInput = await showMascleSelectionDialog();
-    String uniqueKey = '${dateKey}_${DateTime.now().millisecondsSinceEpoch}';
-    String mascle = userInput!["mascle"]!;
-    String caption = userInput["caption"]!;
-
-    String icon = "";
-    String name = "";
-
-    DocumentSnapshot snapshot = await FirebaseFirestore.instance
-        .collection(deviceId)
-        .doc("profile")
-        .get();
-
-    if (snapshot.exists) {
-      Map<String, dynamic>? data = snapshot.data() as Map<String, dynamic>?;
-      if (data != null) {
-        icon = data["photo"] ?? "";
-        name = data["name"] ?? "";
-      }
-    }
-    await FirebaseFirestore.instance.collection(deviceId).doc("info").set({
-      uniqueKey: {
-        "photo": imageUrl,
-        "caption": caption,
-        "comment": "",
-        "icon": icon,
-        "deviceId": deviceId,
-        "day": dateKey,
-        "name": name,
-        "mascle": mascle
-      }
-    }, SetOptions(merge: true));
-
-    await FirebaseFirestore.instance.collection(dateKey).doc("memory").set({
-      uniqueKey: {
-        "photo": imageUrl,
-        "caption": caption,
-        "comment": "",
-        "icon": icon,
-        "deviceId": deviceId,
-        "name": name,
-        "mascle": mascle
-      }
-    }, SetOptions(merge: true));
-
-    print("✅ Mobile: 画像を Firestore に保存しました！");
-  } catch (e) {
-    print("❌ Mobile: Firestore への保存に失敗しました: $e");
-  }
-}
-
 Future<String> uploadImageToStorageWeb(
     String deviceId, Uint8List fileBytes) async {
   try {
@@ -172,59 +188,104 @@ Future<String> uploadImageToStorageMobile(String deviceId, XFile file) async {
 }
 
 // 入力ダイアログを表示する関数
-Future<Map<String, String?>?> showMascleSelectionDialog() async {
+Future<Map<String, String?>?> showMascleSelection(BuildContext context) async {
   String? selectedMascle;
   String? caption;
   List<String> mascleOptions = ["Chest", "Back", "Legs", "Arms"];
 
-  return showDialog<Map<String, String?>>(
-    context: navigatorKey.currentContext!,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text("筋トレ情報を入力"),
-        content: Column(
+  return await showModalBottomSheet<Map<String, String?>>(
+    context: context,
+    isScrollControlled: true, // キーボード対策
+    backgroundColor: Colors.grey[900],
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Text(
+              "筋トレ情報を入力",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.yellow,
+              ),
+            ),
+            SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: selectedMascle,
-              decoration: InputDecoration(labelText: "部位を選択"),
+              decoration: InputDecoration(
+                labelText: "部位を選択",
+                labelStyle: TextStyle(color: Colors.yellow),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.yellow),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.yellow, width: 2),
+                ),
+              ),
+              dropdownColor: Colors.grey[850],
+              style: TextStyle(color: Colors.white),
               items: mascleOptions.map((String mascle) {
                 return DropdownMenuItem<String>(
                   value: mascle,
-                  child: Text(mascle),
+                  child: Text(mascle, style: TextStyle(color: Colors.white)),
                 );
               }).toList(),
               onChanged: (String? newValue) {
                 selectedMascle = newValue;
-                print(selectedMascle);
               },
             ),
             SizedBox(height: 16),
             TextFormField(
-              decoration: InputDecoration(labelText: "キャプションを入力"),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: "キャプションを入力",
+                labelStyle: TextStyle(color: Colors.yellow),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.yellow),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.yellow, width: 2),
+                ),
+              ),
               onChanged: (value) {
                 caption = value;
               },
             ),
+            SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  child: Text("キャンセル", style: TextStyle(color: Colors.grey)),
+                  onPressed: () => Navigator.pop(context, null),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.yellow,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context, {
+                      "mascle": selectedMascle,
+                      "caption": caption,
+                    });
+                  },
+                  child: Text("保存", style: TextStyle(color: Colors.black)),
+                ),
+              ],
+            )
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null), // キャンセル
-            child: Text("キャンセル"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(
-              context,
-              {
-                "mascle": selectedMascle,
-                "caption": caption,
-              },
-            ),
-            child: Text("保存"),
-          ),
-        ],
       );
     },
   );
