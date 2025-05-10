@@ -12,67 +12,69 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _tergetController = TextEditingController();
+  final TextEditingController _benchController = TextEditingController();
+  final TextEditingController _deadController = TextEditingController();
+  final TextEditingController _squatController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  late Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
-  late XFile? pickedFile = null; // nullで初期化
+  Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
+  XFile? pickedFile = null; // nullで初期化
   String deviceId = "";
   late Map<String, String> infoList = {};
   bool _isLoading = true;
-  String username = "";
-  String startDay = "";
+  String number = "a";
 
   @override
   void initState() {
     super.initState();
-    // 非同期処理を別メソッドに分離して呼び出す
     initializeProfile();
   }
 
   Future<void> initializeProfile() async {
-    try {
-      // 非同期処理を実行
-      deviceId = await getDeviceUUID();
-      infoList = await fetchInfo();
-
-      // 非同期処理が完了したら状態を更新
-      setState(() {
-        username = infoList["name"] ?? "";
-        startDay = infoList["startDay"] ?? "";
-        _isLoading = false; // ローディング完了
-      });
-    } catch (e) {
-      print("エラーが発生しました: $e");
-    }
+    deviceId = await getDeviceUUID();
+    infoList = await fetchInfo();
+    setState(() {
+      _nameController.text = infoList["name"] ?? "";
+      _dateController.text = infoList["startDay"] ?? "";
+      _benchController.text = infoList["bench"] ?? "";
+      _deadController.text = infoList["dead"] ?? "";
+      _squatController.text = infoList["squat"] ?? "";
+      _isLoading = false; // 初期化完了！
+    });
   }
 
-  // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    deviceId = await getDeviceUUID(); // デバイス ID を取得
+    deviceId = await getDeviceUUID();
 
     try {
-      pickedFile = await picker.pickImage(source: ImageSource.camera);
+      final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
       if (pickedFile != null) {
-        if (kIsWeb) {
-          // 🌍 Web の場合 → Uint8List に変換
-          try {
-            imageBytes = await pickedFile!.readAsBytes();
+        try {
+          final bytes = await pickedFile.readAsBytes();
 
-            print("成功しました。");
+          if (bytes.isNotEmpty) {
+            if (!mounted) return;
+
             setState(() {
-              pickedFile;
+              imageBytes = bytes;
             });
-          } catch (e) {
-            print("エラーがはっせいしました。");
+            number = "b";
+
+            print("✅ 成功しました");
+          } else {
+            print("❌ 読み取った画像データが空です");
           }
+        } catch (e, stack) {
+          print("❌ 読み取り中にエラーが発生しました: $e");
+          print("❌ Stacktrace: $stack");
         }
       } else {
         print("❌ No image selected.");
       }
-    } catch (e) {
-      print("❌ エラーが発生しました: $e");
+    } catch (e, stack) {
+      print("❌ カメラ起動エラー: $e");
+      print("❌ Stacktrace: $stack");
     }
   }
 
@@ -114,11 +116,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           decoration: BoxDecoration(
                             color: Colors.grey[200], // 背景色
                           ),
-                          child: pickedFile != null
+                          child: imageBytes != Uint8List(0) && number == "b"
                               ? Image.memory(imageBytes, fit: BoxFit.cover)
                               : (infoList["url"]!.isNotEmpty &&
                                       infoList["url"] != "")
-                                  ? Image.network(infoList["url"]!)
+                                  ? Image.network(infoList["url"]!,
+                                      fit: BoxFit.cover)
                                   : Icon(Icons.person,
                                       size: 100, color: Colors.grey),
                         ),
@@ -131,11 +134,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: ElevatedButton.styleFrom(
                               shape: CircleBorder(), // ボタンを丸くする
                               padding: EdgeInsets.all(12), // ボタンのパディング
-                              backgroundColor: const Color.fromARGB(
-                                  255, 209, 209, 0), // ボタンの色
+                              backgroundColor:
+                                  Color.fromARGB(255, 209, 209, 0), // ボタンの色
                             ),
                             child:
-                                Icon(Icons.add, color: Colors.white), // プラスアイコン
+                                Icon(Icons.add, color: Colors.black), // プラスアイコン
                           ),
                         ),
                       ],
@@ -144,34 +147,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(
                     height: 10,
                   ),
-                  Row(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text(
-                          'User Name',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 209, 209, 0),
-                          ),
-                        ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'User Name',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 209, 209, 0),
                       ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text(
-                          "Now : $username",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 209, 209, 0),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -189,55 +174,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Padding(
                     padding: EdgeInsets.all(8),
                     child: Text(
-                      'Your Target',
+                      'Start day',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Color.fromARGB(255, 209, 209, 0),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    child: TextField(
-                      controller: _tergetController,
-                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
-                      decoration: InputDecoration(
-                        hintText: '目標を入力してください',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.fitness_center),
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text(
-                          'Start day',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 209, 209, 0),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text(
-                          "Now : $startDay",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 209, 209, 0),
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -270,14 +213,111 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
+                  const Divider(
+                    color: Color.fromARGB(255, 209, 209, 0),
+                    thickness: 3,
+                    height: 20,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'Best records',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 209, 209, 0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'bench press',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 209, 209, 0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _benchController,
+                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your best records of bench press',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'deadlift',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 209, 209, 0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _deadController,
+                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your best records of deadlift',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'squat',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 209, 209, 0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _squatController,
+                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your best records of squat',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Center(
                     child: Padding(
-                      padding: EdgeInsets.all(8),
+                      padding: EdgeInsets.all(12),
                       child: ElevatedButton(
                         onPressed: () async {
-                          saveInfoWeb(_nameController.text,
-                              _dateController.text, deviceId, imageBytes);
+                          saveInfoWeb(
+                              _nameController.text,
+                              _dateController.text,
+                              deviceId,
+                              imageBytes,
+                              _benchController.text,
+                              _deadController.text,
+                              _squatController.text);
                         },
                         style: ButtonStyle(
                           backgroundColor:
@@ -294,7 +334,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         child: Text(
-                          "変更を保存する",
+                          "save changes",
                           style: TextStyle(
                               color: Color.fromARGB(255, 209, 209, 0)),
                         ),

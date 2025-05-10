@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/fetchMyPhoto.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class WorkoutPage extends StatefulWidget {
   const WorkoutPage({super.key});
@@ -10,8 +11,13 @@ class WorkoutPage extends StatefulWidget {
 
 class _WorkoutPageState extends State<WorkoutPage> {
   late List<Map<String, String>> myWorkout = [];
+  late List<Map<String, String>> originMyWorkout = [];
+  final List<String> categories = ['All', 'Chest', 'Back', 'Legs', 'Arms'];
   bool isLoading = true;
   String streek = "";
+  String selectedCategory = 'All';
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _dayKeys = {}; // "2024-04-29": GlobalKey()
 
   @override
   void initState() {
@@ -20,7 +26,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
   }
 
   void initializeList() async {
-    myWorkout = await fetchHistory();
+    myWorkout = originMyWorkout = await fetchHistory();
     print(myWorkout);
     setState(() {
       isLoading = false;
@@ -28,28 +34,145 @@ class _WorkoutPageState extends State<WorkoutPage> {
     });
   }
 
+  void _jumpToDate(String dateStr) {
+    final key = _dayKeys[dateStr];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 300),
+      );
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
+  void _showCalendarDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          // AlertDialog → Dialog に変更
+          backgroundColor: Colors.black,
+          child: SizedBox(
+            height: 450, // 明示的に高さと幅を指定
+            width: 350,
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Text(
+                    "Select a Date",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+                Expanded(
+                  child: TableCalendar(
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    focusedDay: DateTime.now(),
+                    calendarFormat: CalendarFormat.month,
+                    eventLoader: (day) {
+                      final formatted = _formatDate(day);
+                      return myWorkout
+                          .where((w) => w["day"] == formatted)
+                          .toList();
+                    },
+                    calendarStyle: CalendarStyle(
+                      defaultTextStyle:
+                          const TextStyle(color: Colors.white), // ← 普通の日
+                      weekendTextStyle:
+                          const TextStyle(color: Colors.white70), // ← 土日
+                      outsideTextStyle:
+                          const TextStyle(color: Colors.grey), // ← 前月・次月の日付
+                      selectedDecoration: const BoxDecoration(
+                        color: Color.fromARGB(255, 209, 209, 0), // 黄色で選択
+                        shape: BoxShape.circle,
+                      ),
+                      todayDecoration: BoxDecoration(
+                        color: Colors.white24,
+                        shape: BoxShape.circle,
+                      ),
+                      markersMaxCount: 3,
+                      markerDecoration: BoxDecoration(
+                        color: Colors.yellow.shade700,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    headerStyle: const HeaderStyle(
+                      titleTextStyle: TextStyle(color: Colors.white),
+                      formatButtonTextStyle: TextStyle(color: Colors.white),
+                      formatButtonDecoration: BoxDecoration(
+                        color: Color.fromARGB(255, 209, 209, 0),
+                        borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                      ),
+                      leftChevronIcon:
+                          Icon(Icons.chevron_left, color: Colors.white),
+                      rightChevronIcon:
+                          Icon(Icons.chevron_right, color: Colors.white),
+                    ),
+                    calendarBuilders: CalendarBuilders(
+                      defaultBuilder: (context, day, focusedDay) {
+                        final formatted = _formatDate(day);
+                        final hasWorkout =
+                            myWorkout.any((w) => w["day"] == formatted);
+                        return Container(
+                          alignment: Alignment.center,
+                          margin: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${day.day}',
+                            style: TextStyle(
+                              color:
+                                  hasWorkout ? Colors.yellow : Colors.white60,
+                              fontWeight: hasWorkout
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    onDaySelected: (selectedDay, _) {
+                      Navigator.pop(context);
+                      _jumpToDate(_formatDate(selectedDay));
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void showPastMusclePhotos() {
     // 現在の日付を取得
-    final now = DateTime.now();
+    // final now = DateTime.now();
 
     // 1ヶ月前、3ヶ月前、半年前の日付を計算
-    final oneMonthAgo = now.subtract(Duration(days: 30));
-    final threeMonthsAgo = now.subtract(Duration(days: 90));
-    final sixMonthsAgo = now.subtract(Duration(days: 180));
+    // final oneMonthAgo = now.subtract(Duration(days: 30));
+    // final threeMonthsAgo = now.subtract(Duration(days: 90));
+    // final sixMonthsAgo = now.subtract(Duration(days: 180));
 
     // 各期間の写真をフィルタリング
-    final oneMonthPhoto = myWorkout.firstWhere(
-      (workout) => DateTime.parse(workout["day"] ?? "").isAfter(oneMonthAgo),
-      orElse: () => {},
-    );
-    final threeMonthsPhoto = myWorkout.firstWhere(
-      (workout) => DateTime.parse(workout["day"] ?? "").isAfter(threeMonthsAgo),
-      orElse: () => {},
-    );
-    final sixMonthsPhoto = myWorkout.firstWhere(
-      (workout) => DateTime.parse(workout["day"] ?? "").isAfter(sixMonthsAgo),
-      orElse: () => {},
-    );
+
+    // final oneMonthPhoto = myWorkout.firstWhere(
+    //   (workout) => DateTime.parse(workout["day"] ?? "").isAfter(oneMonthAgo),
+    // );
+
+    // final threeMonthsPhoto = myWorkout.firstWhere(
+    //   (workout) => DateTime.parse(workout["day"] ?? "").isAfter(threeMonthsAgo),
+    // );
+
+    // final sixMonthsPhoto = myWorkout.firstWhere(
+    //   (workout) => DateTime.parse(workout["day"] ?? "").isAfter(sixMonthsAgo),
+    // );
 
     // モーダルダイアログを表示
     showDialog(
@@ -57,21 +180,66 @@ class _WorkoutPageState extends State<WorkoutPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.black,
-          title: const Text(
-            "Past Muscle Photos",
-            style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Past Workout Records",
+                style: TextStyle(
+                    color: Color.fromARGB(255, 209, 209, 0),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
+              ),
+              IconButton(
+                icon: const Icon(Icons.calendar_today,
+                    color: Color.fromARGB(255, 209, 209, 0)),
+                onPressed: () => _showCalendarDialog(context),
+              )
+            ],
           ),
           content: SingleChildScrollView(
+            controller: _scrollController,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (oneMonthPhoto.isNotEmpty)
-                  buildPhotoTile("1 Month Ago", oneMonthPhoto["url"]),
-                if (threeMonthsPhoto.isNotEmpty)
-                  buildPhotoTile("3 Months Ago", threeMonthsPhoto["url"]),
-                if (sixMonthsPhoto.isNotEmpty)
-                  buildPhotoTile("6 Months Ago", sixMonthsPhoto["url"]),
-              ],
+              children: myWorkout.map((record) {
+                final dateKey = record["day"];
+                final key = GlobalKey();
+                _dayKeys[dateKey!] = key;
+
+                return Padding(
+                  key: key,
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      record["url"] != null && record["url"]!.isNotEmpty
+                          ? Image.network(record["url"]!)
+                          : Container(
+                              height: 150,
+                              width: double.infinity,
+                              color: Colors.grey.shade800,
+                              alignment: Alignment.center,
+                              child: const Text("No image",
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                      const SizedBox(height: 4),
+                      Text(
+                        record["mascle"] == "Chest"
+                            ? "Bench press: ${record["bestRecord"] ?? 'N/A'}"
+                            : record["mascle"] == "Back"
+                                ? "Deadlift: ${record["bestRecord"] ?? 'N/A'}"
+                                : "Squat: ${record["bestRecord"] ?? 'N/A'}",
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        "Date: ${record["day"] ?? 'Unknown'}",
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      const Divider(color: Colors.grey),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
           ),
           actions: [
@@ -127,6 +295,24 @@ class _WorkoutPageState extends State<WorkoutPage> {
     );
   }
 
+  void changeCategry(String newCategoly) {
+    if (newCategoly == "All") {
+      myWorkout = originMyWorkout;
+    } else {
+      myWorkout =
+          originMyWorkout.where((map) => map["mascle"] == newCategoly).toList();
+      streek = myWorkout.length.toString();
+
+      if (myWorkout.isEmpty) {
+        myWorkout = [
+          {"url": "", "name": "", "startDay": ""}
+        ];
+      }
+
+      print(myWorkout);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -149,6 +335,57 @@ class _WorkoutPageState extends State<WorkoutPage> {
           : SingleChildScrollView(
               child: Column(
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding:
+                            EdgeInsets.symmetric(vertical: 9, horizontal: 9),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(12),
+                            border:
+                                Border.all(color: Colors.grey.withOpacity(0.3)),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 5),
+                            child: DropdownButton<String>(
+                              value: selectedCategory,
+                              dropdownColor: Colors.black,
+                              borderRadius: BorderRadius.circular(12),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  selectedCategory = newValue!;
+                                  changeCategry(selectedCategory);
+                                });
+                              },
+                              underline: SizedBox(),
+                              icon: Icon(Icons.arrow_drop_down,
+                                  color: Color.fromARGB(
+                                      255, 209, 209, 0)), // 👈 アイコンの色を黄色に
+                              isDense: true,
+                              items: categories.map<DropdownMenuItem<String>>(
+                                  (String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Center(
+                                    child: Text(
+                                      value,
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 209, 209, 0),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
@@ -166,11 +403,28 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                     fontSize: 25),
                               ),
                             ),
+                            Padding(
+                                padding: EdgeInsets.all(9),
+                                child: myWorkout[0]["mascle"] != ""
+                                    ? Text(
+                                        myWorkout[0]["mascle"] ?? "",
+                                        style: TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 209, 209, 0),
+                                            fontSize: 14),
+                                      )
+                                    : Text(
+                                        "",
+                                        style: TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 209, 209, 0),
+                                            fontSize: 14),
+                                      )),
 
                             // メイン写真とStreek
                             Container(
-                                width: 220, // 好きな幅
-                                height: 300, // 縦長
+                                width: 200, // 好きな幅
+                                height: 270, // 縦長
                                 decoration: BoxDecoration(
                                   borderRadius:
                                       BorderRadius.circular(20), // 角を丸く
@@ -191,37 +445,40 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                       )),
                           ],
                         ),
-
                         const SizedBox(width: 20),
                         // Streek情報
                         Expanded(
-                            child: Center(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Text("Your Streek",
-                                  style: TextStyle(
-                                      color: Color.fromARGB(255, 209, 209, 0),
-                                      fontSize: 20)),
-                              const SizedBox(height: 10),
-                              myWorkout[0]["url"] != ""
-                                  ? Text(
-                                      streek,
-                                      style: TextStyle(
-                                        fontSize: 64,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Text("Total training",
+                                    style: TextStyle(
                                         color: Color.fromARGB(255, 209, 209, 0),
-                                      ),
-                                    )
-                                  : Text(
-                                      "0",
-                                      style: TextStyle(
-                                        fontSize: 64,
-                                        color: Color.fromARGB(255, 209, 209, 0),
-                                      ),
-                                    )
-                            ],
+                                        fontSize: 20)),
+                                const SizedBox(height: 10),
+                                myWorkout[0]["url"] != ""
+                                    ? Text(
+                                        streek,
+                                        style: TextStyle(
+                                          fontSize: 64,
+                                          color:
+                                              Color.fromARGB(255, 209, 209, 0),
+                                        ),
+                                      )
+                                    : Text(
+                                        "0",
+                                        style: TextStyle(
+                                          fontSize: 64,
+                                          color:
+                                              Color.fromARGB(255, 209, 209, 0),
+                                        ),
+                                      )
+                              ],
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
@@ -236,6 +493,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                             fontSize: 20)),
                   ),
 
+                  const SizedBox(height: 8),
                   Container(
                     padding:
                         EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
@@ -253,17 +511,6 @@ class _WorkoutPageState extends State<WorkoutPage> {
                           style: TextStyle(color: Colors.black, fontSize: 16)),
                     ),
                   ),
-
-                  // フォーカス情報
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text("You focused for chest training",
-                        style: TextStyle(
-                            color: Color.fromARGB(255, 209, 209, 0),
-                            fontSize: 16)),
-                  ),
-
-                  const SizedBox(height: 8),
 
                   // 過去の写真3つ
 
@@ -289,6 +536,14 @@ class _WorkoutPageState extends State<WorkoutPage> {
                           children: [
                             Text(
                               workout["day"] ?? "",
+                              style: const TextStyle(
+                                color: Color.fromARGB(255, 209, 209, 0),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              workout["mascle"] ?? "",
                               style: const TextStyle(
                                 color: Color.fromARGB(255, 209, 209, 0),
                                 fontSize: 12,
