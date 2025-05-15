@@ -106,6 +106,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final picker = ImagePicker();
 
     try {
+      await showDialog<void>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            contentPadding: EdgeInsets.all(16),
+            backgroundColor: Colors.grey[700],
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 参考写真（assetsに画像を用意）
+                Image.asset(
+                  'icons/upper-body.png',
+                  fit: BoxFit.fitHeight,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '毎日同じような角度で写真を撮りましょう。\n成長が分かりやすくなります。',
+                  style: TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: Text('写真撮影', style: TextStyle(color: Colors.white)),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          );
+        },
+      );
       final XFile? pickedFile =
           await picker.pickImage(source: ImageSource.camera);
 
