@@ -869,45 +869,58 @@ class _WorkoutPageState extends State<WorkoutPage> {
                             ),
                             SizedBox(height: 16),
                             firstLastBack.isNotEmpty
-                                ? Stack(
-                                    children: [
-                                      Container(
-                                        width: 180, // 好きな幅
-                                        height: 270, // 縦長
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(20), // 角を丸く
-                                          color: Colors
-                                              .grey[200], // 背景色（画像読み込み前などに見える）
-                                        ),
-                                        clipBehavior:
-                                            Clip.antiAlias, // 画像を角丸に合わせてカット
-                                        child: firstLastBack[0]["url"] != ""
-                                            ? Image.network(
-                                                firstLastBack[0]["url"]!,
-                                                fit: BoxFit
-                                                    .fitHeight, // 縦にフィット（横が余ってもOK）
-                                              )
-                                            : Icon(
-                                                Icons
-                                                    .image_not_supported, // 適当なアイコン（変更可能）
-                                                size: 50, // アイコンのサイズ
-                                                color: Colors.grey, // アイコンの色
-                                              ),
-                                      ),
-                                      Positioned(
-                                        top: 8,
-                                        left: 8,
-                                        child: Text(
-                                          firstLastBack[0]["day"]!,
-                                          style: TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 209, 209, 0),
-                                            fontSize: 16,
+                                ? Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(
+                                          20), // 角丸をInkWellにも伝える
+                                      onTap: () {
+                                        selectedPhoto(
+                                            "back", firstLastBack[0]["day"]!);
+                                      },
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            width: 180, // 好きな幅
+                                            height: 270, // 縦長
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      20), // 角を丸く
+                                              color: Colors.grey[
+                                                  200], // 背景色（画像読み込み前などに見える）
+                                            ),
+                                            clipBehavior:
+                                                Clip.antiAlias, // 画像を角丸に合わせてカット
+                                            child: firstLastBack[0]["url"] != ""
+                                                ? Image.network(
+                                                    firstLastBack[0]["url"]!,
+                                                    fit: BoxFit
+                                                        .fitHeight, // 縦にフィット（横が余ってもOK）
+                                                  )
+                                                : Icon(
+                                                    Icons
+                                                        .image_not_supported, // 適当なアイコン（変更可能）
+                                                    size: 50, // アイコンのサイズ
+                                                    color:
+                                                        Colors.grey, // アイコンの色
+                                                  ),
                                           ),
-                                        ),
+                                          Positioned(
+                                            top: 8,
+                                            left: 8,
+                                            child: Text(
+                                              firstLastBack[0]["day"]!,
+                                              style: TextStyle(
+                                                color: Color.fromARGB(
+                                                    255, 209, 209, 0),
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   )
                                 : Container(
                                     width: 180, // 好きな幅
@@ -946,45 +959,58 @@ class _WorkoutPageState extends State<WorkoutPage> {
                             ),
                             SizedBox(height: 16),
                             firstLastArms.isNotEmpty
-                                ? Stack(
-                                    children: [
-                                      Container(
-                                        width: 180, // 好きな幅
-                                        height: 270, // 縦長
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(20), // 角を丸く
-                                          color: Colors
-                                              .grey[200], // 背景色（画像読み込み前などに見える）
-                                        ),
-                                        clipBehavior:
-                                            Clip.antiAlias, // 画像を角丸に合わせてカット
-                                        child: firstLastArms[0]["url"] != ""
-                                            ? Image.network(
-                                                firstLastArms[0]["url"]!,
-                                                fit: BoxFit
-                                                    .fitHeight, // 縦にフィット（横が余ってもOK）
-                                              )
-                                            : Icon(
-                                                Icons
-                                                    .image_not_supported, // 適当なアイコン（変更可能）
-                                                size: 50, // アイコンのサイズ
-                                                color: Colors.grey, // アイコンの色
-                                              ),
-                                      ),
-                                      Positioned(
-                                        top: 8,
-                                        left: 8,
-                                        child: Text(
-                                          firstLastArms[0]["day"]!,
-                                          style: TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 209, 209, 0),
-                                            fontSize: 16,
+                                ? Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(
+                                          20), // 角丸をInkWellにも伝える
+                                      onTap: () {
+                                        selectedPhoto(
+                                            "arms", firstLastArms[0]["day"]!);
+                                      },
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            width: 180, // 好きな幅
+                                            height: 270, // 縦長
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      20), // 角を丸く
+                                              color: Colors.grey[
+                                                  200], // 背景色（画像読み込み前などに見える）
+                                            ),
+                                            clipBehavior:
+                                                Clip.antiAlias, // 画像を角丸に合わせてカット
+                                            child: firstLastArms[0]["url"] != ""
+                                                ? Image.network(
+                                                    firstLastArms[0]["url"]!,
+                                                    fit: BoxFit
+                                                        .fitHeight, // 縦にフィット（横が余ってもOK）
+                                                  )
+                                                : Icon(
+                                                    Icons
+                                                        .image_not_supported, // 適当なアイコン（変更可能）
+                                                    size: 50, // アイコンのサイズ
+                                                    color:
+                                                        Colors.grey, // アイコンの色
+                                                  ),
                                           ),
-                                        ),
+                                          Positioned(
+                                            top: 8,
+                                            left: 8,
+                                            child: Text(
+                                              firstLastArms[0]["day"]!,
+                                              style: TextStyle(
+                                                color: Color.fromARGB(
+                                                    255, 209, 209, 0),
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   )
                                 : Container(
                                     width: 180, // 好きな幅
@@ -1018,45 +1044,58 @@ class _WorkoutPageState extends State<WorkoutPage> {
                             ),
                             SizedBox(height: 16),
                             firstLastLegs.isNotEmpty
-                                ? Stack(
-                                    children: [
-                                      Container(
-                                        width: 180, // 好きな幅
-                                        height: 270, // 縦長
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(20), // 角を丸く
-                                          color: Colors
-                                              .grey[200], // 背景色（画像読み込み前などに見える）
-                                        ),
-                                        clipBehavior:
-                                            Clip.antiAlias, // 画像を角丸に合わせてカット
-                                        child: firstLastLegs[0]["url"] != ""
-                                            ? Image.network(
-                                                firstLastLegs[0]["url"]!,
-                                                fit: BoxFit
-                                                    .fitHeight, // 縦にフィット（横が余ってもOK）
-                                              )
-                                            : Icon(
-                                                Icons
-                                                    .image_not_supported, // 適当なアイコン（変更可能）
-                                                size: 50, // アイコンのサイズ
-                                                color: Colors.grey, // アイコンの色
-                                              ),
-                                      ),
-                                      Positioned(
-                                        top: 8,
-                                        left: 8,
-                                        child: Text(
-                                          firstLastLegs[0]["day"]!,
-                                          style: TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 209, 209, 0),
-                                            fontSize: 16,
+                                ? Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(
+                                          20), // 角丸をInkWellにも伝える
+                                      onTap: () {
+                                        selectedPhoto(
+                                            "legs", firstLastLegs[0]["day"]!);
+                                      },
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            width: 180, // 好きな幅
+                                            height: 270, // 縦長
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      20), // 角を丸く
+                                              color: Colors.grey[
+                                                  200], // 背景色（画像読み込み前などに見える）
+                                            ),
+                                            clipBehavior:
+                                                Clip.antiAlias, // 画像を角丸に合わせてカット
+                                            child: firstLastLegs[0]["url"] != ""
+                                                ? Image.network(
+                                                    firstLastLegs[0]["url"]!,
+                                                    fit: BoxFit
+                                                        .fitHeight, // 縦にフィット（横が余ってもOK）
+                                                  )
+                                                : Icon(
+                                                    Icons
+                                                        .image_not_supported, // 適当なアイコン（変更可能）
+                                                    size: 50, // アイコンのサイズ
+                                                    color:
+                                                        Colors.grey, // アイコンの色
+                                                  ),
                                           ),
-                                        ),
+                                          Positioned(
+                                            top: 8,
+                                            left: 8,
+                                            child: Text(
+                                              firstLastLegs[0]["day"]!,
+                                              style: TextStyle(
+                                                color: Color.fromARGB(
+                                                    255, 209, 209, 0),
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   )
                                 : Container(
                                     width: 180, // 好きな幅
