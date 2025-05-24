@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:muscle_share/methods/getDeviceId.dart';
 
-Future<Map<String, String>> fetchInfo() async {
+Future<Map<String, dynamic>> fetchInfo() async {
   String deviceId = await getDeviceUUID();
-  Map<String, String> infoList = {};
+  Map<String, dynamic> infoList = {};
 
   try {
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
@@ -20,9 +20,11 @@ Future<Map<String, String>> fetchInfo() async {
           "url": data["photo"]?.toString() ?? "",
           "name": data["name"]?.toString() ?? "",
           "startDay": data["startDay"]?.toString() ?? "",
-          "bench": data["bench"]?.toString() ?? "",
-          "dead": data["dead"]?.toString() ?? "",
-          "squat": data["squat"]?.toString() ?? "",
+          "bench": data["bench"] ?? 0,
+          "dead": data["dead"] ?? 0,
+          "squat": data["squat"] ?? 0,
+          "height": data["height"] ?? 0,
+          "weight": data["weight"] ?? 0,
         };
       }
 
@@ -37,8 +39,8 @@ Future<Map<String, String>> fetchInfo() async {
   return infoList;
 }
 
-Future<Map<String, String>> fetchOtherInfo(String deviceId) async {
-  Map<String, String> infoList = {};
+Future<Map<String, dynamic>> fetchOtherInfo(String deviceId) async {
+  Map<String, dynamic> infoList = {};
 
   try {
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
@@ -54,9 +56,8 @@ Future<Map<String, String>> fetchOtherInfo(String deviceId) async {
           "url": data["photo"]?.toString() ?? "",
           "name": data["name"]?.toString() ?? "",
           "startDay": data["startDay"]?.toString() ?? "",
-          "bench": data["bench"]?.toString() ?? "",
-          "dead": data["dead"]?.toString() ?? "",
-          "squat": data["squat"]?.toString() ?? "",
+          "height": data["height"] ?? 0,
+          "weight": data["weight"] ?? 0,
         };
       }
 
@@ -69,4 +70,53 @@ Future<Map<String, String>> fetchOtherInfo(String deviceId) async {
   }
 
   return infoList;
+}
+
+Future<Map<String, List<Map<String, dynamic>>>> fetchBestRecords(
+    String deviceId) async {
+  final docSnapshot = await FirebaseFirestore.instance
+      .collection(deviceId)
+      .doc("profile")
+      .get();
+
+  final data = docSnapshot.data();
+
+  if (data == null || data['bestRecords'] == null) {
+    // データがない場合、空の構造を返す
+    return {
+      '胸': [],
+      '背中': [],
+      '脚': [],
+      '上腕二頭筋': [],
+      '上腕三頭筋': [],
+      '腹筋': [],
+    };
+  }
+
+  final rawBestRecords = data['bestRecords'] as Map<String, dynamic>;
+
+  final result = <String, List<Map<String, dynamic>>>{};
+
+  for (final part in rawBestRecords.keys) {
+    final partData = rawBestRecords[part];
+    if (partData is Map) {
+      // Map形式で保存されていた場合、リストに変換
+      final list = partData.values.map<Map<String, dynamic>>((e) {
+        return Map<String, dynamic>.from(e);
+      }).toList();
+      result[part] = list;
+    } else if (partData is List) {
+      // すでにList形式ならそのまま
+      result[part] = List<Map<String, dynamic>>.from(partData);
+    } else {
+      result[part] = [];
+    }
+  }
+
+  // 部位がなければ空配列にしておく（安全対策）
+  for (var part in ['胸', '背中', '脚', '上腕二頭筋', '上腕三頭筋', '腹筋']) {
+    result.putIfAbsent(part, () => []);
+  }
+
+  return result;
 }

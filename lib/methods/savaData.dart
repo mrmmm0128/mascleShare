@@ -30,7 +30,7 @@ Future<void> savePhotoWeb(
 
     String icon = "";
     String name = "";
-    String bestRecord = "";
+
     Map<String, String?>? userInput =
         await showMascleSelection(context, isPublic);
     if (userInput == null) {
@@ -53,15 +53,6 @@ Future<void> savePhotoWeb(
       if (data != null) {
         icon = data["photo"] ?? "";
         name = data["name"] ?? "";
-        if (mascle == "Chest") {
-          bestRecord = data["bench"];
-        }
-        if (mascle == "Back") {
-          bestRecord = data["dead"];
-        }
-        if (mascle == "Legs") {
-          bestRecord = data["squat"];
-        }
       }
     }
 
@@ -75,7 +66,6 @@ Future<void> savePhotoWeb(
         "day": dateKey,
         "name": name,
         "mascle": mascle,
-        "bestRecord": bestRecord,
       }
     }, SetOptions(merge: true));
 

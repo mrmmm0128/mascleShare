@@ -1,7 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:muscle_share/methods/AddFriendMethod.dart';
 import 'package:muscle_share/methods/fetchInfoProfile.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
+import 'package:muscle_share/pages/OtherBestRecordsInput.dart';
+import 'package:muscle_share/pages/profile.dart';
 
 class otherProfileScreen extends StatefulWidget {
   final String deviceId; // ← 受け取りたい変数
@@ -15,14 +19,15 @@ class otherProfileScreen extends StatefulWidget {
 
 class _otherProfileScreenState extends State<otherProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _benchController = TextEditingController();
-  final TextEditingController _deadController = TextEditingController();
-  final TextEditingController _squatController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   late Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
   late XFile? pickedFile = null; // nullで初期化
-  late Map<String, String> infoList = {};
+  late Map<String, dynamic> infoList = {};
   bool _isLoading = true;
+  late int? _selectedHeight;
+  late int? _selectedWeight;
+  late String myDeviceId;
+  ProfileScreenState PS = ProfileScreenState();
 
   @override
   void initState() {
@@ -32,12 +37,13 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
 
   Future<void> initializeProfile() async {
     infoList = await fetchOtherInfo(widget.deviceId);
+    myDeviceId = await getDeviceUUID();
     setState(() {
       _nameController.text = infoList["name"] ?? "";
       _dateController.text = infoList["startDay"] ?? "";
-      _benchController.text = infoList["bench"] ?? "";
-      _deadController.text = infoList["dead"] ?? "";
-      _squatController.text = infoList["squat"] ?? "";
+      _selectedHeight = infoList["height"] ?? 0;
+      _selectedWeight = infoList["weight"] ?? 0;
+
       _isLoading = false; // 初期化完了！
     });
   }
@@ -84,8 +90,7 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
                               ? Image.memory(imageBytes, fit: BoxFit.cover)
                               : (infoList["url"]!.isNotEmpty &&
                                       infoList["url"] != "")
-                                  ? Image.network(infoList["url"]!,
-                                      fit: BoxFit.cover)
+                                  ? Image.network(infoList["url"]!)
                                   : Icon(Icons.person,
                                       size: 100, color: Colors.grey),
                         ),
@@ -94,6 +99,25 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
                   ),
                   const SizedBox(
                     height: 10,
+                  ),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        addFrend(widget.deviceId, myDeviceId);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Color.fromARGB(255, 209, 209, 0),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                              color: Color.fromARGB(255, 209, 209, 0)),
+                        ),
+                      ),
+                      child: Text("友達追加"),
+                    ),
                   ),
                   Padding(
                     padding: EdgeInsets.all(8),
@@ -175,6 +199,99 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
                   ),
                   Padding(
                     padding: EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Personal data",
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 209, 209, 0),
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'height',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromARGB(255, 209, 209, 0),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 15),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today,
+                                    color: Color.fromARGB(255, 209, 209, 0)),
+                                const SizedBox(width: 10),
+                                Text(
+                                  _selectedHeight != 0
+                                      ? "${_selectedHeight}kg"
+                                      : 'Not defined',
+                                  style: const TextStyle(
+                                    color: Color.fromARGB(255, 209, 209, 0),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'weight',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromARGB(255, 209, 209, 0),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 15),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today,
+                                    color: Color.fromARGB(255, 209, 209, 0)),
+                                const SizedBox(width: 10),
+                                Text(
+                                  _selectedWeight != 0
+                                      ? "${_selectedWeight}kg"
+                                      : 'Not defined',
+                                  style: const TextStyle(
+                                    color: Color.fromARGB(255, 209, 209, 0),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
                     child: Text(
                       'Best records',
                       style: TextStyle(
@@ -184,122 +301,43 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                    child: Text(
-                      'bench press',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.e_mobiledata,
-                              color: Color.fromARGB(255, 209, 209, 0)),
-                          const SizedBox(width: 10),
-                          Text(
-                            _benchController.text.isNotEmpty
-                                ? _benchController.text
-                                : 'Not defined',
-                            style: const TextStyle(
-                              color: Color.fromARGB(255, 209, 209, 0),
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                    child: Text(
-                      'deadlift',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.label_off_sharp,
-                              color: Color.fromARGB(255, 209, 209, 0)),
-                          const SizedBox(width: 10),
-                          Text(
-                            _deadController.text.isNotEmpty
-                                ? _deadController.text
-                                : 'Not defined',
-                            style: const TextStyle(
-                              color: Color.fromARGB(255, 209, 209, 0),
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                    child: Text(
-                      'squat',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.sailing_rounded,
-                              color: Color.fromARGB(255, 209, 209, 0)),
-                          const SizedBox(width: 10),
-                          Text(
-                            _squatController.text.isNotEmpty
-                                ? _squatController.text
-                                : 'Not defined',
-                            style: const TextStyle(
-                              color: Color.fromARGB(255, 209, 209, 0),
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 8),
+                  PS.buildSectionCard(
+                    title: "Best Records of your training",
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OtherBestRecordsInput(
+                              deviceId: widget.deviceId,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Text(
+                          'Tap to input your Best Records',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color.fromARGB(255, 209, 209, 0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

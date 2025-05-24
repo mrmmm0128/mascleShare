@@ -1,27 +1,35 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:muscle_share/methods/PhotoCropper.dart';
+import 'package:muscle_share/methods/PhotoSelect.dart';
 import 'package:muscle_share/methods/fetchInfoProfile.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/methods/saveDataForProfile.dart';
+import 'package:muscle_share/pages/BestRecordsInput.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  ProfileScreenState createState() => ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _benchController = TextEditingController();
-  final TextEditingController _deadController = TextEditingController();
-  final TextEditingController _squatController = TextEditingController();
+  // final TextEditingController _benchController = TextEditingController();
+  // final TextEditingController _deadController = TextEditingController();
+  // final TextEditingController _squatController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
-  XFile? pickedFile = null; // nullで初期化
+  late Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
+  late XFile? pickedFile = null; // nullで初期化
   String deviceId = "";
-  late Map<String, String> infoList = {};
+  late Map<String, dynamic> infoList = {};
   bool _isLoading = true;
-  String number = "a";
+  int? _selectedHeight;
+  final List<int> _heightOptions =
+      List.generate(61, (index) => 140 + index); // 140〜200
+  int? _selectedWeight;
+  final List<int> _weightOptions =
+      List.generate(121, (index) => 30 + index); // 30〜150kg
 
   @override
   void initState() {
@@ -35,47 +43,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _nameController.text = infoList["name"] ?? "";
       _dateController.text = infoList["startDay"] ?? "";
-      _benchController.text = infoList["bench"] ?? "";
-      _deadController.text = infoList["dead"] ?? "";
-      _squatController.text = infoList["squat"] ?? "";
-      _isLoading = false; // 初期化完了！
+      _selectedHeight = infoList["height"] as int?;
+      _selectedWeight = infoList["weight"] as int?;
+
+      _isLoading = false;
     });
   }
 
+  // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    deviceId = await getDeviceUUID();
+    deviceId = await getDeviceUUID(); // デバイス ID を取得
 
     try {
-      final pickedFile = await picker.pickImage(source: ImageSource.camera);
+      pickedFile = await picker.pickImage(source: ImageSource.camera);
 
       if (pickedFile != null) {
-        try {
-          final bytes = await pickedFile.readAsBytes();
+        if (kIsWeb) {
+          try {
+            Uint8List rawBytes = await pickedFile!.readAsBytes();
 
-          if (bytes.isNotEmpty) {
-            if (!mounted) return;
-
-            setState(() {
-              imageBytes = bytes;
-            });
-            number = "b";
-
-            print("✅ 成功しました");
-          } else {
-            print("❌ 読み取った画像データが空です");
+            // 🌟 トリミング画面に移動
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CropPhaseScreen(
+                  imageBytes: rawBytes,
+                  onCropped: (Uint8List croppedBytes) {
+                    setState(() {
+                      imageBytes = croppedBytes;
+                    });
+                  },
+                ),
+              ),
+            );
+          } catch (e) {
+            print("トリミングエラー: $e");
           }
-        } catch (e, stack) {
-          print("❌ 読み取り中にエラーが発生しました: $e");
-          print("❌ Stacktrace: $stack");
         }
       } else {
         print("❌ No image selected.");
       }
-    } catch (e, stack) {
-      print("❌ カメラ起動エラー: $e");
-      print("❌ Stacktrace: $stack");
+    } catch (e) {
+      print("❌ エラーが発生しました: $e");
     }
+  }
+
+  Widget buildSectionCard({required String title, required Widget child}) {
+    return Card(
+      elevation: 6,
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Color.fromARGB(159, 109, 110, 72),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 209, 209, 0),
+              ),
+            ),
+            SizedBox(height: 12),
+            child,
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -100,91 +138,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
             )
           : SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
+                  // 📸 画像表示カード
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
                     child: Stack(
                       children: [
-                        // コンテナ部分
                         Container(
-                          width: MediaQuery.of(context)
-                              .size
-                              .width, // 横幅を画面サイズに合わせる
-                          height: MediaQuery.of(context).size.width *
-                              2 /
-                              3, // 高さも比例
+                          width: MediaQuery.of(context).size.width,
+                          height: MediaQuery.of(context).size.width * 2 / 3,
                           decoration: BoxDecoration(
-                            color: Colors.grey[200], // 背景色
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          child: imageBytes != Uint8List(0) && number == "b"
-                              ? Image.memory(imageBytes, fit: BoxFit.cover)
+                          clipBehavior: Clip.antiAlias,
+                          child: pickedFile != null
+                              ? PhotoCropView(imageBytes: imageBytes)
                               : (infoList["url"]!.isNotEmpty &&
                                       infoList["url"] != "")
-                                  ? Image.network(infoList["url"]!,
-                                      fit: BoxFit.cover)
-                                  : Icon(Icons.person,
-                                      size: 100, color: Colors.grey),
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: InteractiveViewer(
+                                        minScale: 1.0,
+                                        maxScale: 4.0,
+                                        panEnabled: true,
+                                        child: Image.network(
+                                          infoList["url"]!,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 100,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
                         ),
-                        // ボタン部分
                         Positioned(
-                          bottom: 10, // コンテナの底からの距離
-                          right: 10, // コンテナの右からの距離
-                          child: ElevatedButton(
-                            onPressed: _takePhoto, // 写真を選択するメソッド
-                            style: ElevatedButton.styleFrom(
-                              shape: CircleBorder(), // ボタンを丸くする
-                              padding: EdgeInsets.all(12), // ボタンのパディング
-                              backgroundColor:
-                                  Color.fromARGB(255, 209, 209, 0), // ボタンの色
+                          bottom: 12,
+                          right: 12,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Color.fromARGB(255, 209, 209, 0),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 6,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
                             ),
-                            child:
-                                Icon(Icons.add, color: Colors.black), // プラスアイコン
+                            child: IconButton(
+                              onPressed: _takePhoto,
+                              icon: Icon(Icons.add_a_photo,
+                                  color: Colors.black87),
+                              iconSize: 28,
+                              tooltip: '写真を撮る',
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'User Name',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+
+                  buildSectionCard(
+                    title: "User Name",
                     child: TextField(
                       controller: _nameController,
-                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
                       decoration: InputDecoration(
-                        hintText: 'Enter your name',
-                        border: OutlineInputBorder(),
+                        hintText: "Enter your name",
                         prefixIcon: Icon(Icons.person),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'Start day',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+
+                  buildSectionCard(
+                    title: "Start Day",
                     child: GestureDetector(
                       onTap: () async {
                         DateTime? selectedDate = await showDatePicker(
@@ -194,153 +238,173 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           lastDate: DateTime(2100),
                         );
                         if (selectedDate != null) {
-                          _dateController.text = selectedDate
-                              .toString()
-                              .split(' ')[0]; // フォーマットをYYYY-MM-DDに
+                          _dateController.text =
+                              selectedDate.toString().split(' ')[0];
                         }
                       },
                       child: AbsorbPointer(
                         child: TextField(
                           controller: _dateController,
-                          style: TextStyle(
-                              color: Color.fromARGB(255, 209, 209, 0)),
                           decoration: InputDecoration(
                             hintText: 'Enter your start day of muscle training',
-                            border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.calendar_today),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const Divider(
-                    color: Color.fromARGB(255, 209, 209, 0),
-                    thickness: 3,
-                    height: 20,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'Best records',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'bench press',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      controller: _benchController,
-                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
-                      decoration: InputDecoration(
-                        hintText: 'Enter your best records of bench press',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'deadlift',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      controller: _deadController,
-                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
-                      decoration: InputDecoration(
-                        hintText: 'Enter your best records of deadlift',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'squat',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      controller: _squatController,
-                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
-                      decoration: InputDecoration(
-                        hintText: 'Enter your best records of squat',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          saveInfoWeb(
-                              _nameController.text,
-                              _dateController.text,
-                              deviceId,
-                              imageBytes,
-                              _benchController.text,
-                              _deadController.text,
-                              _squatController.text);
-                        },
-                        style: ButtonStyle(
-                          backgroundColor:
-                              WidgetStateProperty.resolveWith<Color>(
-                                  (Set<WidgetState> states) {
-                            if (states.contains(WidgetState.pressed)) {
-                              return Color.fromARGB(
-                                  255, 255, 255, 100); // 押したときの色（明るい黄色）
-                            }
-                            return Colors.black; // 通常時の色
-                          }),
-                          side: WidgetStateProperty.all(
-                            BorderSide(color: Color.fromARGB(255, 209, 209, 0)),
+
+                  buildSectionCard(
+                    title: "Personal Data",
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "height",
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 209, 209, 0),
+                              fontSize: 16),
+                        ),
+                        const SizedBox(
+                          height: 16,
+                        ),
+                        DropdownButtonFormField<int>(
+                          value: _weightOptions.contains(_selectedHeight)
+                              ? _selectedHeight
+                              : null,
+                          items: _heightOptions.map((height) {
+                            return DropdownMenuItem<int>(
+                              value: height,
+                              child: Text('$height cm'),
+                            );
+                          }).toList(),
+                          decoration: InputDecoration(
+                            hintText: 'Select your Height (kg)',
+                            prefixIcon: Icon(Icons.monitor_weight),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedHeight = value;
+                            });
+                          },
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          "weight",
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 209, 209, 0),
+                              fontSize: 16),
+                        ),
+                        const SizedBox(
+                          height: 16,
+                        ),
+                        DropdownButtonFormField<int>(
+                          value: _weightOptions.contains(_selectedWeight)
+                              ? _selectedWeight
+                              : null,
+                          decoration: InputDecoration(
+                            hintText: 'Select your weight (kg)',
+                            prefixIcon: Icon(Icons.monitor_weight),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          items: _weightOptions.map((weight) {
+                            return DropdownMenuItem<int>(
+                              value: weight,
+                              child: Text('$weight kg'),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedWeight = value;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  buildSectionCard(
+                    title: "Best Records of your training",
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BestRecordsInputScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            )
+                          ],
                         ),
                         child: Text(
-                          "save changes",
+                          'Tap to input your Best Records',
                           style: TextStyle(
-                              color: Color.fromARGB(255, 209, 209, 0)),
+                            fontSize: 16,
+                            color: Color.fromARGB(255, 209, 209, 0),
+                          ),
                         ),
                       ),
                     ),
-                  )
+                  ),
+
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_selectedHeight != null && _selectedWeight != null) {
+                        saveInfoWeb(
+                          _nameController.text,
+                          _dateController.text,
+                          deviceId,
+                          imageBytes,
+                          _selectedHeight!,
+                          _selectedWeight!,
+                        );
+                      } else {
+                        // 例えばダイアログやSnackBarでユーザーに通知する
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('身長と体重を入力してください')),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Color.fromARGB(255, 209, 209, 0),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side:
+                            BorderSide(color: Color.fromARGB(255, 209, 209, 0)),
+                      ),
+                    ),
+                    child: Text("変更を保存する"),
+                  ),
+                  SizedBox(height: 40),
                 ],
               ),
             ),

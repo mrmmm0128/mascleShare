@@ -2,9 +2,10 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
 
 Future<void> saveInfoWeb(String name, String startDay, String deviceId,
-    Uint8List photoBytes, String bench, String dead, String squat) async {
+    Uint8List photoBytes, int height, int weight) async {
   try {
     String imageUrl = "";
     String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -20,11 +21,10 @@ Future<void> saveInfoWeb(String name, String startDay, String deviceId,
       await FirebaseFirestore.instance.collection(deviceId).doc("profile").set({
         "photo": imageUrl,
         "startDay": startDay,
+        "height": height,
+        "weight": weight,
         "name": name,
-        "bench": bench,
-        "dead": dead,
-        "squat": squat
-      });
+      }, SetOptions(merge: true));
 
       memoryData.forEach((key, value) {
         if (value is Map<String, dynamic> && value["deviceId"] == deviceId) {
@@ -49,19 +49,17 @@ Future<void> saveInfoWeb(String name, String startDay, String deviceId,
         await docRef.update({
           "startDay": startDay,
           "name": name,
-          "bench": bench,
-          "dead": dead,
-          "squat": squat
+          "height": height,
+          "weight": weight,
         });
       } else {
         // ドキュメントが存在しない場合はset
         await docRef.set({
           "startDay": startDay,
           "name": name,
-          "bench": bench,
-          "dead": dead,
-          "squat": squat
-        });
+          "height": height,
+          "weight": weight,
+        }, SetOptions(merge: true));
       }
       memoryData.forEach((key, value) {
         if (value is Map<String, dynamic> && value["deviceId"] == deviceId) {
@@ -97,5 +95,19 @@ Future<String> uploadProfileImageToStorageWeb(
   } catch (e) {
     print("❌ Web: Firebase Storage へのアップロードに失敗しました: $e");
     throw e;
+  }
+}
+
+Future<void> saveBestRecords(
+    Map<String, List<Map<String, dynamic>>> bestRecords) async {
+  String deviceId = await getDeviceUUID();
+  final docRef = FirebaseFirestore.instance.collection(deviceId).doc("profile");
+
+  final docSnapshot = await docRef.get();
+
+  if (docSnapshot.exists) {
+    await docRef.update({"bestRecords": bestRecords});
+  } else {
+    await docRef.set({"bestRecords": bestRecords});
   }
 }

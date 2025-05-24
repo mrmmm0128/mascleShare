@@ -1,5 +1,6 @@
 // home_screen.dart
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/fetchPhoto.dart';
@@ -30,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late List<AnimationController> controllers;
   late List<Animation<double>> scaleAnimations;
   bool isLoading = true;
+  List<String> deviceIds = [];
 
   @override
   void initState() {
@@ -70,10 +72,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> fetchPhotos() async {
     originMatchingValues = [];
     deviceId = await getDeviceUUID(); // デバイス ID を取得
+
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection(deviceId)
+        .doc("profile")
+        .get();
+
+    if (snapshot.exists) {
+      if (snapshot.data() != null &&
+          (snapshot.data() as Map<String, dynamic>)
+              .containsKey('friendDeviceId')) {
+        // ✅ 型を明示的に変換
+        deviceIds = List<String>.from(
+            (snapshot.data() as Map<String, dynamic>)['friendDeviceId']);
+        deviceIds.add(deviceId);
+        print(deviceIds);
+      } else {
+        deviceIds.add(deviceId);
+        print(deviceIds);
+      }
+    } else {
+      print("ドキュメントが存在しません");
+      deviceIds.add(deviceId);
+      print(deviceIds);
+    }
+
     List<Map<String, Map<String, String>>> photos = await fetchTodayphoto();
 
     for (var photo in photos) {
-      if (photo.values.first["deviceId"] == deviceId &&
+      if (deviceIds.contains(photo.values.first["deviceId"]) &&
           !originMatchingValues.any((element) =>
               element.values.first["url"] == photo.values.first["url"])) {
         originMatchingValues.add(photo);
@@ -533,15 +560,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                   color: Colors.transparent,
                                                   child: InkWell(
                                                     onTap: () {
-                                                      Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  otherProfileScreen(
+                                                      photoList[
+                                                                          index]
+                                                                      .values
+                                                                      .first[
+                                                                  "deviceId"]! !=
+                                                              deviceId
+                                                          ? Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                  builder: (context) => otherProfileScreen(
                                                                       deviceId: photoList[
                                                                               index]
                                                                           .values
-                                                                          .first["deviceId"]!)));
+                                                                          .first["deviceId"]!)))
+                                                          : null;
                                                     },
                                                     child: Image.network(
                                                       photoList[index]

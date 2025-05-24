@@ -22,6 +22,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
   String selectedCategory = 'All';
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _dayKeys = {}; // "2024-04-29": GlobalKey()
+  Map<String, List<Map<String, dynamic>>> firstLastData = {};
 
   @override
   void initState() {
@@ -367,6 +368,12 @@ class _WorkoutPageState extends State<WorkoutPage> {
           Arms[Arms.length - 1],
         ]);
       }
+      firstLastData = {
+        "Chest": firstLastChest,
+        "Back": firstLastBack,
+        "legs": firstLastLegs,
+        "Arms": firstLastArms,
+      };
     }
   }
 
@@ -414,7 +421,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                       const SizedBox(height: 16),
                       boolFirst
                           ? Image.network(
-                              firstLastChest[0]["url"]!,
+                              firstLastData[mascle]![0]["url"],
                               errorBuilder: (context, error, stackTrace) {
                                 return Column(
                                   children: const [
@@ -432,9 +439,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                 );
                               },
                             )
-                          : firstLastChest[1].isNotEmpty
+                          : firstLastData[mascle]![1]["url"].isNotEmpty
                               ? Image.network(
-                                  firstLastChest[1]["url"]!,
+                                  firstLastData[mascle]![1]["url"]!,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Column(
                                       children: const [
@@ -480,13 +487,13 @@ class _WorkoutPageState extends State<WorkoutPage> {
                       ),
                       boolFirst
                           ? Text(
-                              firstLastChest[0]["day"]!,
+                              firstLastData[mascle]![0]["day"],
                               style: TextStyle(
                                   color: Color.fromARGB(255, 209, 209, 0),
                                   fontSize: 20),
                             )
                           : Text(
-                              firstLastChest[1]["day"]!,
+                              firstLastData[mascle]![1]["day"],
                               style: TextStyle(
                                   color: Color.fromARGB(255, 209, 209, 0),
                                   fontSize: 20),
@@ -702,65 +709,6 @@ class _WorkoutPageState extends State<WorkoutPage> {
                     ),
                   ),
 
-                  // 過去の写真3つ
-
-                  // Padding(
-                  //   padding: const EdgeInsets.all(16),
-                  //   child: GridView.builder(
-                  //     shrinkWrap: true,
-                  //     physics:
-                  //         NeverScrollableScrollPhysics(), // 他のスクロールビューと干渉しないように
-                  //     itemCount:
-                  //         myWorkout.length > 1 ? myWorkout.length - 1 : 0,
-                  //     gridDelegate:
-                  //         const SliverGridDelegateWithFixedCrossAxisCount(
-                  //       crossAxisCount: 3,
-                  //       mainAxisSpacing: 10,
-                  //       crossAxisSpacing: 10,
-                  //       childAspectRatio: 0.6,
-                  //     ),
-                  //     itemBuilder: (context, index) {
-                  //       final workout =
-                  //           myWorkout[index + 1]; // indexを+2して3つ目以降を取得
-                  //       return Column(
-                  //         children: [
-                  //           Text(
-                  //             workout["day"] ?? "",
-                  //             style: const TextStyle(
-                  //               color: Color.fromARGB(255, 209, 209, 0),
-                  //               fontSize: 12,
-                  //             ),
-                  //           ),
-                  //           const SizedBox(height: 4),
-                  //           Text(
-                  //             workout["mascle"] ?? "",
-                  //             style: const TextStyle(
-                  //               color: Color.fromARGB(255, 209, 209, 0),
-                  //               fontSize: 12,
-                  //             ),
-                  //           ),
-                  //           const SizedBox(height: 4),
-                  //           Expanded(
-                  //             child: Container(
-                  //               decoration: BoxDecoration(
-                  //                 borderRadius: BorderRadius.circular(12),
-                  //                 color: Colors.yellow[100],
-                  //               ),
-                  //               child: ClipRRect(
-                  //                 borderRadius: BorderRadius.circular(12),
-                  //                 child: Image.network(
-                  //                   workout["url"] ?? "",
-                  //                   fit: BoxFit.fitHeight,
-                  //                   width: double.infinity,
-                  //                 ),
-                  //               ),
-                  //             ),
-                  //           ),
-                  //         ],
-                  //       );
-                  //     },
-                  //   ),
-                  // ),
                   const SizedBox(
                     height: 30,
                   ),

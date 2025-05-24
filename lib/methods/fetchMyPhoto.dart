@@ -19,7 +19,6 @@ Future<List<Map<String, String>>> fetchHistory() async {
               "url": value["photo"],
               "mascle": value["mascle"]?.toString() ?? "",
               "day": value["day"],
-              "bestRecord": value["bestRecord"]
             });
           }
         }
