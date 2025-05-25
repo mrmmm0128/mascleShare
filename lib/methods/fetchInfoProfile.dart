@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 
 Future<Map<String, dynamic>> fetchInfo() async {
-  String deviceId = await getDeviceUUID();
+  String deviceId = await getDeviceIDweb();
   Map<String, dynamic> infoList = {};
 
   try {
@@ -87,8 +87,7 @@ Future<Map<String, List<Map<String, dynamic>>>> fetchBestRecords(
       '胸': [],
       '背中': [],
       '脚': [],
-      '上腕二頭筋': [],
-      '上腕三頭筋': [],
+      '腕': [],
       '腹筋': [],
     };
   }

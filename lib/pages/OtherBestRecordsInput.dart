@@ -12,7 +12,7 @@ class OtherBestRecordsInput extends StatefulWidget {
 }
 
 class _OtherRecordsState extends State<OtherBestRecordsInput> {
-  final List<String> bodyParts = ['胸', '背中', '脚', '上腕二頭筋', '上腕三頭筋', '腹筋'];
+  final List<String> bodyParts = ['胸', '背中', '脚', '腕', '腹筋'];
   bool _isLoading = true;
   Map<String, List<Map<String, dynamic>>> bestRecords = {};
 
@@ -44,73 +44,84 @@ class _OtherRecordsState extends State<OtherBestRecordsInput> {
         ),
       );
     }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 209, 209, 0),
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.black),
         title: Text(
-          'Best',
+          'Best Records',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
-      body: SingleChildScrollView(
+      backgroundColor: Colors.black,
+      body: ListView.builder(
         padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var part in bodyParts)
-              Column(
+        itemCount: bodyParts.length,
+        itemBuilder: (context, index) {
+          String part = bodyParts[index];
+          List<Map<String, dynamic>> records = bestRecords[part] ?? [];
+
+          return Card(
+            color: Color.fromARGB(255, 30, 30, 30),
+            margin: EdgeInsets.only(bottom: 12),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(part,
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 209, 209, 0))),
+                      Icon(Icons.fitness_center,
+                          color: Colors.yellowAccent, size: 18),
+                      SizedBox(width: 6),
+                      Text(
+                        part,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.yellowAccent,
+                        ),
+                      ),
                     ],
                   ),
-                  ...bestRecords[part]!.asMap().entries.map((entry) {
-                    Map<String, dynamic> record = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                  SizedBox(height: 6),
+                  for (var record in records)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
                       child: Row(
                         children: [
                           Expanded(
                             flex: 2,
                             child: Text(
                               record['name'] ?? '',
-                              style: TextStyle(color: Colors.white),
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 14),
                             ),
+                          ),
+                          Text(
+                            '${record['weight'] ?? 0}kg',
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 13),
                           ),
                           SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              '${record['weight'] ?? 0} kg',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              '${record['reps'] ?? 0} 回',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                          Text(
+                            '${record['reps'] ?? 0}回',
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 13),
                           ),
                         ],
                       ),
-                    );
-                  }),
-                  Divider(color: Colors.grey.shade600)
+                    ),
                 ],
               ),
-            SizedBox(height: 20),
-          ],
-        ),
+            ),
+          );
+        },
       ),
-      backgroundColor: Colors.black,
     );
   }
 }

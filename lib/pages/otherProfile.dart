@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:muscle_share/methods/AddFriendMethod.dart';
+import 'package:muscle_share/methods/PhotoSelect.dart';
 import 'package:muscle_share/methods/fetchInfoProfile.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/pages/OtherBestRecordsInput.dart';
@@ -28,6 +30,7 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
   late int? _selectedWeight;
   late String myDeviceId;
   ProfileScreenState PS = ProfileScreenState();
+  List<String> deviceIds = [];
 
   @override
   void initState() {
@@ -37,7 +40,22 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
 
   Future<void> initializeProfile() async {
     infoList = await fetchOtherInfo(widget.deviceId);
-    myDeviceId = await getDeviceUUID();
+    myDeviceId = await getDeviceIDweb();
+
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection(myDeviceId)
+        .doc("profile")
+        .get();
+    if (snapshot.exists) {
+      if (snapshot.data() != null &&
+          (snapshot.data() as Map<String, dynamic>)
+              .containsKey('friendDeviceId')) {
+        // ✅ 型を明示的に変換
+        deviceIds = List<String>.from(
+            (snapshot.data() as Map<String, dynamic>)['friendDeviceId']);
+      }
+    }
+
     setState(() {
       _nameController.text = infoList["name"] ?? "";
       _dateController.text = infoList["startDay"] ?? "";
@@ -70,238 +88,154 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
             )
           : SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
+                  // 📸 画像表示カード
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
                     child: Stack(
                       children: [
-                        // コンテナ部分
                         Container(
-                          width: MediaQuery.of(context)
-                              .size
-                              .width, // 横幅を画面サイズに合わせる
-                          height: MediaQuery.of(context).size.width *
-                              2 /
-                              3, // 高さも比例
+                          width: MediaQuery.of(context).size.width,
+                          height: MediaQuery.of(context).size.width * 2 / 3,
                           decoration: BoxDecoration(
-                            color: Colors.grey[200], // 背景色
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
+                          clipBehavior: Clip.antiAlias,
                           child: pickedFile != null
-                              ? Image.memory(imageBytes, fit: BoxFit.cover)
+                              ? PhotoCropView(imageBytes: imageBytes)
                               : (infoList["url"]!.isNotEmpty &&
                                       infoList["url"] != "")
-                                  ? Image.network(infoList["url"]!)
-                                  : Icon(Icons.person,
-                                      size: 100, color: Colors.grey),
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: InteractiveViewer(
+                                        minScale: 1.0,
+                                        maxScale: 4.0,
+                                        panEnabled: true,
+                                        child: Image.network(
+                                          infoList["url"]!,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 100,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        addFrend(widget.deviceId, myDeviceId);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Color.fromARGB(255, 209, 209, 0),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                              color: Color.fromARGB(255, 209, 209, 0)),
+                  deviceIds.contains(widget.deviceId)
+                      ? SizedBox()
+                      : Center(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              addFrend(widget.deviceId, myDeviceId);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Color.fromARGB(255, 209, 209, 0),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 32, vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                    color: Color.fromARGB(255, 209, 209, 0)),
+                              ),
+                            ),
+                            child: Text("友達追加"),
+                          ),
                         ),
-                      ),
-                      child: Text("友達追加"),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'User Name',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey), // 枠線つける
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.person,
-                              color: Color.fromARGB(255, 209, 209, 0)),
-                          const SizedBox(width: 10),
-                          Text(
-                            _nameController.text.isNotEmpty
-                                ? _nameController.text
-                                : 'Enter your name', // テキストがなかったらヒントみたいに
-                            style: const TextStyle(
-                              color: Color.fromARGB(255, 209, 209, 0),
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'Start day',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_today,
-                              color: Color.fromARGB(255, 209, 209, 0)),
-                          const SizedBox(width: 10),
-                          Text(
-                            _dateController.text.isNotEmpty
-                                ? _dateController.text
-                                : 'Not defined',
-                            style: const TextStyle(
-                              color: Color.fromARGB(255, 209, 209, 0),
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Personal data",
+
+                  PS.buildSectionCard(
+                    title: "User Name",
+                    child: ListTile(
+                      leading: Icon(Icons.person, color: Colors.yellowAccent),
+                      title: Text("Name",
                           style: TextStyle(
-                              color: Color.fromARGB(255, 209, 209, 0),
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'height',
-                            style: TextStyle(
-                              fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 209, 209, 0),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 15),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.calendar_today,
-                                    color: Color.fromARGB(255, 209, 209, 0)),
-                                const SizedBox(width: 10),
-                                Text(
-                                  _selectedHeight != 0
-                                      ? "${_selectedHeight}kg"
-                                      : 'Not defined',
-                                  style: const TextStyle(
-                                    color: Color.fromARGB(255, 209, 209, 0),
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'weight',
-                            style: TextStyle(
-                              fontSize: 18,
+                              color: Colors.black)),
+                      trailing: Text(
+                        _nameController.text.isNotEmpty
+                            ? _nameController.text
+                            : "No name",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+
+                  PS.buildSectionCard(
+                    title: "Start Day",
+                    child: ListTile(
+                      leading: Icon(Icons.calendar_today,
+                          color: Colors.yellowAccent),
+                      title: Text("Start Date",
+                          style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 209, 209, 0),
-                            ),
-                          ),
+                              color: Colors.black)),
+                      trailing: Text(
+                        infoList["startDay"] ?? "Unknown",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+
+                  PS.buildSectionCard(
+                    title: "Personal Data",
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading:
+                              Icon(Icons.height, color: Colors.yellowAccent),
+                          title: Text("Height",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black)),
+                          trailing: Text("${_selectedHeight} cm",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black)),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 8),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 15),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.calendar_today,
-                                    color: Color.fromARGB(255, 209, 209, 0)),
-                                const SizedBox(width: 10),
-                                Text(
-                                  _selectedWeight != 0
-                                      ? "${_selectedWeight}kg"
-                                      : 'Not defined',
-                                  style: const TextStyle(
-                                    color: Color.fromARGB(255, 209, 209, 0),
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        Divider(color: Colors.grey.shade400),
+                        ListTile(
+                          leading: Icon(Icons.monitor_weight,
+                              color: Colors.yellowAccent),
+                          title: Text("Weight",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black)),
+                          trailing: Text("${_selectedWeight} kg",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black)),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 8),
                         ),
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'Best records',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 209, 209, 0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+
                   PS.buildSectionCard(
                     title: "Best Records of your training",
                     child: GestureDetector(
@@ -310,15 +244,14 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => OtherBestRecordsInput(
-                              deviceId: widget.deviceId,
-                            ),
+                                deviceId: widget.deviceId),
                           ),
                         );
                       },
                       child: Container(
                         padding: EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Colors.black,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(

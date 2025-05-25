@@ -38,7 +38,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> initializeProfile() async {
-    deviceId = await getDeviceUUID();
+    deviceId = await getDeviceIDweb();
     infoList = await fetchInfo();
     setState(() {
       _nameController.text = infoList["name"] ?? "";
@@ -53,7 +53,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    deviceId = await getDeviceUUID(); // デバイス ID を取得
+    deviceId = await getDeviceIDweb(); // デバイス ID を取得
 
     try {
       pickedFile = await picker.pickImage(source: ImageSource.camera);
@@ -90,27 +90,33 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget buildSectionCard({required String title, required Widget child}) {
-    return Card(
-      elevation: 6,
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: Color.fromARGB(159, 109, 110, 72),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 209, 209, 0),
-              ),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: SizedBox(
+        width: double.infinity, // 横幅いっぱいに広げる
+        child: Card(
+          elevation: 6,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          color: Color.fromARGB(159, 109, 110, 72),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 209, 209, 0),
+                  ),
+                ),
+                SizedBox(height: 12),
+                child,
+              ],
             ),
-            SizedBox(height: 12),
-            child,
-          ],
+          ),
         ),
       ),
     );
@@ -148,7 +154,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           width: MediaQuery.of(context).size.width,
                           height: MediaQuery.of(context).size.width * 2 / 3,
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: Colors.grey[400],
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
@@ -179,7 +185,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       child: Icon(
                                         Icons.person,
                                         size: 100,
-                                        color: Colors.grey[400],
+                                        color: Colors.black,
                                       ),
                                     ),
                         ),
@@ -200,9 +206,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                             ),
                             child: IconButton(
                               onPressed: _takePhoto,
-                              icon: Icon(Icons.add_a_photo,
-                                  color: Colors.black87),
-                              iconSize: 28,
+                              icon: Icon(Icons.photo, color: Colors.black87),
+                              iconSize: 20,
                               tooltip: '写真を撮る',
                             ),
                           ),
@@ -219,7 +224,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                         hintText: "Enter your name",
                         prefixIcon: Icon(Icons.person),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: Colors.grey[400],
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -249,7 +254,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                             hintText: 'Enter your start day of muscle training',
                             prefixIcon: Icon(Icons.calendar_today),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: Colors.grey[400],
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -287,7 +292,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                             hintText: 'Select your Height (kg)',
                             prefixIcon: Icon(Icons.monitor_weight),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: Colors.grey[400],
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -316,7 +321,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                             hintText: 'Select your weight (kg)',
                             prefixIcon: Icon(Icons.monitor_weight),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: Colors.grey[400],
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -351,7 +356,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                       child: Container(
                         padding: EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Colors.black,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(

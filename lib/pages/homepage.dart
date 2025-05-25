@@ -7,6 +7,7 @@ import 'package:muscle_share/methods/fetchPhoto.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/methods/savaData.dart';
 import 'package:muscle_share/methods/updatephotoInfo.dart';
+import 'package:muscle_share/pages/FriendListScreen.dart';
 import 'package:muscle_share/pages/myWorkout.dart';
 import 'package:muscle_share/pages/otherProfile.dart';
 import 'package:muscle_share/pages/profile.dart';
@@ -71,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> fetchPhotos() async {
     originMatchingValues = [];
-    deviceId = await getDeviceUUID(); // デバイス ID を取得
+    deviceId = await getDeviceIDweb(); // デバイス ID を取得
 
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
         .collection(deviceId)
@@ -210,6 +211,56 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _onTap(int index) {
     setState(() => showHearts[index] = true);
     controllers[index].forward();
+  }
+
+  void _showActionSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera_alt,
+                    color: Color.fromARGB(255, 209, 209, 0)),
+                title: Text(
+                  '写真を撮る',
+                  style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _takePhoto(); // 既存の関数
+                },
+              ),
+              ListTile(
+                leading:
+                    Icon(Icons.group, color: Color.fromARGB(255, 209, 209, 0)),
+                title: Text(
+                  '友達リストを確認する',
+                  style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _viewFriendList(); // 追加関数（下で定義）
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _viewFriendList() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FriendListScreen()),
+    );
   }
 
   @override
@@ -417,68 +468,84 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ),
                                   ),
                                   Spacer(),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.more_vert,
-                                      color: Color.fromARGB(255, 209, 209, 0),
-                                    ),
-                                    onPressed: () async {
-                                      // モーダルで編集・削除の選択肢を表示
-                                      showModalBottomSheet(
-                                        context: context,
-                                        backgroundColor:
-                                            Colors.grey[900], // ダーク系背景
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.vertical(
-                                              top: Radius.circular(20)),
-                                        ),
-                                        builder: (BuildContext context) {
-                                          return Padding(
-                                            padding: const EdgeInsets.all(20.0),
-                                            child: Wrap(
-                                              children: [
-                                                ListTile(
-                                                  leading: Icon(Icons.edit,
-                                                      color: Colors.yellow),
-                                                  title: Text('編集',
-                                                      style: TextStyle(
-                                                          color: Colors.white)),
-                                                  onTap: () async {
-                                                    Navigator.pop(
-                                                        context); // モーダルを閉じる
+                                  matchingValues[index]
+                                              .values
+                                              .first["deviceId"]! ==
+                                          deviceId
+                                      ? IconButton(
+                                          icon: Icon(
+                                            Icons.more_vert,
+                                            color: Color.fromARGB(
+                                                255, 209, 209, 0),
+                                          ),
+                                          onPressed: () async {
+                                            // モーダルで編集・削除の選択肢を表示
+                                            showModalBottomSheet(
+                                              context: context,
+                                              backgroundColor:
+                                                  Colors.grey[900], // ダーク系背景
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.vertical(
+                                                        top: Radius.circular(
+                                                            20)),
+                                              ),
+                                              builder: (BuildContext context) {
+                                                return Padding(
+                                                  padding: const EdgeInsets.all(
+                                                      20.0),
+                                                  child: Wrap(
+                                                    children: [
+                                                      ListTile(
+                                                        leading: Icon(
+                                                            Icons.edit,
+                                                            color:
+                                                                Colors.yellow),
+                                                        title: Text('編集',
+                                                            style: TextStyle(
+                                                                color: Colors
+                                                                    .white)),
+                                                        onTap: () async {
+                                                          Navigator.pop(
+                                                              context); // モーダルを閉じる
 
-                                                    await updatePhotoInfo(
-                                                        context,
-                                                        matchingValues[index]
-                                                            .keys
-                                                            .first);
-                                                    await initialize();
-                                                  },
-                                                ),
-                                                ListTile(
-                                                  leading: Icon(Icons.delete,
-                                                      color: Colors.red),
-                                                  title: Text('削除',
-                                                      style: TextStyle(
-                                                          color: Colors.white)),
-                                                  onTap: () async {
-                                                    Navigator.pop(
-                                                        context); // モーダルを閉じる
+                                                          await updatePhotoInfo(
+                                                              context,
+                                                              matchingValues[
+                                                                      index]
+                                                                  .keys
+                                                                  .first);
+                                                          await initialize();
+                                                        },
+                                                      ),
+                                                      ListTile(
+                                                        leading: Icon(
+                                                            Icons.delete,
+                                                            color: Colors.red),
+                                                        title: Text('削除',
+                                                            style: TextStyle(
+                                                                color: Colors
+                                                                    .white)),
+                                                        onTap: () async {
+                                                          Navigator.pop(
+                                                              context); // モーダルを閉じる
 
-                                                    await deletePhoto(
-                                                        matchingValues[index]
-                                                            .keys
-                                                            .first);
-                                                    await initialize();
-                                                  },
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
+                                                          await deletePhoto(
+                                                              matchingValues[
+                                                                      index]
+                                                                  .keys
+                                                                  .first);
+                                                          await initialize();
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          },
+                                        )
+                                      : SizedBox(),
                                 ],
                               ),
 
@@ -720,9 +787,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color.fromARGB(255, 209, 209, 0),
         onPressed: () {
-          _takePhoto();
+          _showActionSheet(context);
         },
-        child: Icon(Icons.add_a_photo, color: Colors.black),
+        child: Icon(Icons.more_horiz, color: Colors.black),
       ),
     );
   }

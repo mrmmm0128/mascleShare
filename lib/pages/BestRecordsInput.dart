@@ -9,7 +9,7 @@ class BestRecordsInputScreen extends StatefulWidget {
 }
 
 class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
-  final List<String> bodyParts = ['胸', '背中', '脚', '上腕二頭筋', '上腕三頭筋', '腹筋'];
+  final List<String> bodyParts = ['胸', '背中', '脚', '腕', '腹筋'];
   bool _isLoading = true;
   Map<String, List<Map<String, dynamic>>> bestRecords = {};
 
@@ -20,7 +20,7 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
   }
 
   Future<void> initialize() async {
-    String deviceId = await getDeviceUUID();
+    String deviceId = await getDeviceIDweb();
     final data = await fetchBestRecords(deviceId);
     // 各部位がなければ空リストで初期化
 
@@ -32,7 +32,11 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
 
   void _addExercise(String part) {
     setState(() {
-      bestRecords[part]!.add({'name': '', 'weight': ''});
+      bestRecords[part]!.add({
+        'name': '',
+        'weight': 0, // int型
+        'reps': 1, // int型（最低1回）
+      });
     });
   }
 
@@ -54,18 +58,20 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
         ),
       );
     }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 209, 209, 0),
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.black),
         title: Text(
-          'Best',
+          'Best Records',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
+      backgroundColor: Colors.black,
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -74,95 +80,123 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(part,
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 209, 209, 0))),
+                      Icon(Icons.fitness_center,
+                          color: Colors.yellowAccent, size: 18),
+                      SizedBox(width: 6),
+                      Text(
+                        part,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.yellowAccent,
+                        ),
+                      ),
+                      Spacer(),
                       IconButton(
-                        icon: Icon(Icons.add),
+                        icon:
+                            Icon(Icons.add_circle_outline, color: Colors.white),
                         onPressed: () => _addExercise(part),
-                      )
+                      ),
                     ],
                   ),
                   ...bestRecords[part]!.asMap().entries.map((entry) {
                     int index = entry.key;
                     Map<String, dynamic> record = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              initialValue: record['name'] ?? '',
-                              decoration: InputDecoration(
-                                hintText: '種目名',
-                                filled: true,
-                                fillColor: Colors.white,
+
+                    return Card(
+                      color: Color.fromARGB(255, 30, 30, 30),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      margin: EdgeInsets.only(bottom: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: TextFormField(
+                                initialValue: record['name'] ?? '',
+                                decoration: _inputDecoration("種目名"),
+                                style: TextStyle(color: Colors.black),
+                                onChanged: (value) {
+                                  bestRecords[part]![index]['name'] = value;
+                                },
                               ),
-                              onChanged: (value) {
-                                bestRecords[part]![index]['name'] = value;
-                              },
                             ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: TextFormField(
-                              initialValue: record['weight']?.toString() ?? '',
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                hintText: 'kg',
-                                filled: true,
-                                fillColor: Colors.white,
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: DropdownButtonFormField<int>(
+                                value: record['weight'] ?? 0,
+                                decoration: _inputDecoration("kg"),
+                                items: List.generate(41, (i) {
+                                  int kg = i * 5;
+                                  return DropdownMenuItem(
+                                      value: kg, child: Text("$kg kg"));
+                                }),
+                                onChanged: (value) {
+                                  bestRecords[part]![index]['weight'] =
+                                      value ?? 0;
+                                },
                               ),
-                              onChanged: (value) {
-                                bestRecords[part]![index]['weight'] =
-                                    int.tryParse(value) ?? 0;
-                              },
                             ),
-                          ),
-                          Expanded(
-                            child: TextFormField(
-                              initialValue: record['reps']?.toString() ?? '',
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                hintText: '回数',
-                                filled: true,
-                                fillColor: Colors.white,
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: DropdownButtonFormField<int>(
+                                value: record['reps'] ?? 1,
+                                decoration: _inputDecoration("回数"),
+                                items: List.generate(30, (i) {
+                                  int reps = i + 1;
+                                  return DropdownMenuItem(
+                                      value: reps, child: Text("$reps 回"));
+                                }),
+                                onChanged: (value) {
+                                  bestRecords[part]![index]['reps'] =
+                                      value ?? 1;
+                                },
                               ),
-                              onChanged: (value) {
-                                bestRecords[part]![index]['reps'] =
-                                    int.tryParse(value) ?? 0;
-                              },
                             ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _removeExercise(part, index),
-                          )
-                        ],
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.redAccent),
+                              onPressed: () => _removeExercise(part, index),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }),
-                  Divider(color: Colors.grey.shade600)
                 ],
               ),
             SizedBox(height: 20),
             Center(
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 209, 209, 0),
+                  foregroundColor: Colors.black,
+                ),
                 onPressed: () {
                   saveBestRecords(bestRecords);
                 },
-                child: Text("保存する"),
+                icon: Icon(Icons.save),
+                label: Text("保存する"),
               ),
             )
           ],
         ),
       ),
-      backgroundColor: Colors.black,
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: Colors.grey[600]),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
     );
   }
 }
