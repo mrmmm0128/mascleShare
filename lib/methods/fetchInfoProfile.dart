@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 
 Future<Map<String, dynamic>> fetchInfo() async {
-  String deviceId = await getDeviceIDweb();
+  String deviceId = await getDeviceUUID();
   Map<String, dynamic> infoList = {};
 
   try {

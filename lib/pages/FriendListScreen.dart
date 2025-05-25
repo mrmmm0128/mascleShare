@@ -21,7 +21,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
 
   Future<void> fetchFriendList() async {
     try {
-      String deviceId = getDeviceIDweb();
+      String deviceId = await getDeviceUUID();
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
           .collection(deviceId)
           .doc("profile")
