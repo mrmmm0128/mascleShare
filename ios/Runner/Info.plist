@@ -49,6 +49,12 @@
 	<string>カメラを使用して写真を撮影します。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>フォトライブラリを使用します。</string>
+	<key>UIBackgroundModes</key>
+	<array>
+	<string>remote-notification</string>
+	</array>
+	<key>NSPushNotificationUsageDescription</key>
+	<string>通知を受け取るために必要です。</string>
 
 </dict>
 </plist>
