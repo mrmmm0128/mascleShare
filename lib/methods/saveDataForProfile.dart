@@ -26,6 +26,11 @@ Future<void> saveInfoWeb(String name, String startDay, String deviceId,
         "name": name,
       }, SetOptions(merge: true));
 
+      await FirebaseFirestore.instance
+          .collection("user_list")
+          .doc(deviceId)
+          .set({"name": name});
+
       memoryData.forEach((key, value) {
         if (value is Map<String, dynamic> && value["deviceId"] == deviceId) {
           // deviceId が一致するフィールドの "icon" と "name" を更新
@@ -70,6 +75,10 @@ Future<void> saveInfoWeb(String name, String startDay, String deviceId,
           memoryRef.set({uniqueKey: updatedEntry}, SetOptions(merge: true));
         }
       });
+      await FirebaseFirestore.instance
+          .collection("user_list")
+          .doc(deviceId)
+          .set({"name": name});
     }
     print(imageUrl);
 

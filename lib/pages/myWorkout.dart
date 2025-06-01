@@ -370,7 +370,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
       }
       firstLastData = {
         "Chest": firstLastChest,
-        "Back": firstLastBack,
+        "back": firstLastBack,
         "legs": firstLastLegs,
         "Arms": firstLastArms,
       };

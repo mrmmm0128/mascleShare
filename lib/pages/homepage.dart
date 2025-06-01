@@ -7,6 +7,7 @@ import 'package:muscle_share/methods/fetchPhoto.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/methods/savaData.dart';
 import 'package:muscle_share/methods/updatephotoInfo.dart';
+import 'package:muscle_share/pages/FIndBroScreen.dart';
 import 'package:muscle_share/pages/FriendListScreen.dart';
 import 'package:muscle_share/pages/myWorkout.dart';
 import 'package:muscle_share/pages/otherProfile.dart';
@@ -236,6 +237,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 onTap: () {
                   Navigator.pop(context);
                   _takePhoto(); // 既存の関数
+                },
+              ),
+              ListTile(
+                leading:
+                    Icon(Icons.group, color: Color.fromARGB(255, 209, 209, 0)),
+                title: Text(
+                  'find your bro',
+                  style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => FindBroScreen()),
+                  );
                 },
               ),
               ListTile(

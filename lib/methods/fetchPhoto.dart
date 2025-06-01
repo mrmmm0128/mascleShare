@@ -7,7 +7,7 @@ Future<List<Map<String, Map<String, String>>>> fetchTodayphoto() async {
   print(dateKey);
   try {
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
-        .collection(dateKey)
+        .collection("date$dateKey")
         .doc("memory")
         .get();
 

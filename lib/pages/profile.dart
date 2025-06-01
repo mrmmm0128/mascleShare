@@ -7,6 +7,7 @@ import 'package:muscle_share/methods/fetchInfoProfile.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/methods/saveDataForProfile.dart';
 import 'package:muscle_share/pages/BestRecordsInput.dart';
+import 'package:muscle_share/data/PreAndCity.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -30,6 +31,13 @@ class ProfileScreenState extends State<ProfileScreen> {
   int? _selectedWeight;
   final List<int> _weightOptions =
       List.generate(121, (index) => 30 + index); // 30〜150kg
+
+  bool enableGatoure = false;
+
+  String? selectedPrefecture;
+  String? selectedCity;
+
+  final Map<String, List<String>> prefectureData = PreAndCity.data;
 
   @override
   void initState() {
@@ -341,6 +349,91 @@ class ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   ),
+
+                  buildSectionCard(
+                      title: "training together",
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: enableGatoure,
+                                onChanged: (value) {
+                                  setState(() {
+                                    enableGatoure = value ?? false;
+                                  });
+                                },
+                                activeColor: Color.fromARGB(255, 209, 209, 0),
+                              ),
+                              Text(
+                                '合トレ機能を使用しますか？',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16),
+                          if (enableGatoure) ...[
+                            Text(
+                              '希望の合トレ場所',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            SizedBox(height: 16),
+                            DropdownButtonFormField<String>(
+                              dropdownColor: Colors.black,
+                              decoration: InputDecoration(
+                                labelText: "都道府県を選択",
+                                labelStyle: TextStyle(color: Colors.white),
+                                filled: true,
+                                fillColor: Colors.grey[900],
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                              ),
+                              value: selectedPrefecture,
+                              items: prefectureData.keys.map((String key) {
+                                return DropdownMenuItem<String>(
+                                  value: key,
+                                  child: Text(key,
+                                      style: TextStyle(color: Colors.white)),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedPrefecture = value;
+                                  selectedCity = null;
+                                });
+                              },
+                            ),
+                            SizedBox(height: 16),
+                            if (selectedPrefecture != null)
+                              DropdownButtonFormField<String>(
+                                dropdownColor: Colors.black,
+                                decoration: InputDecoration(
+                                  labelText: "市町村を選択",
+                                  labelStyle: TextStyle(color: Colors.white),
+                                  filled: true,
+                                  fillColor: Colors.grey[900],
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10)),
+                                ),
+                                value: selectedCity,
+                                items: prefectureData[selectedPrefecture]!
+                                    .map((city) => DropdownMenuItem<String>(
+                                          value: city,
+                                          child: Text(city,
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        ))
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedCity = value;
+                                  });
+                                },
+                              ),
+                          ]
+                        ],
+                      )),
 
                   buildSectionCard(
                     title: "Best Records of your training",

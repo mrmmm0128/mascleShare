@@ -69,7 +69,10 @@ Future<void> savePhotoWeb(
       }
     }, SetOptions(merge: true));
 
-    await FirebaseFirestore.instance.collection(dateKey).doc("memory").set({
+    await FirebaseFirestore.instance
+        .collection("date$dateKey")
+        .doc("memory")
+        .set({
       uniqueKey: {
         "photo": imageUrl,
         "caption": caption,

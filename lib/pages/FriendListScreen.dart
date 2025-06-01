@@ -12,6 +12,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
   List<String> deviceIds = [];
   List<Map<String, String>> friendLists = [];
   bool _isLoading = true;
+  List<Map<String, dynamic>> friendRequests = [];
 
   @override
   void initState() {
@@ -83,41 +84,101 @@ class _FriendListScreenState extends State<FriendListScreen> {
                 color: Colors.yellowAccent,
               ),
             )
-          : ListView.separated(
-              padding: const EdgeInsets.all(12),
-              itemCount: friendLists.length,
-              separatorBuilder: (context, index) =>
-                  Divider(color: Colors.grey[700]),
-              itemBuilder: (context, index) {
-                final friend = friendLists[index];
-                return ListTile(
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  leading: CircleAvatar(
-                    backgroundImage: friend['url']!.isNotEmpty
-                        ? NetworkImage(friend['url']!)
-                        : null,
-                    backgroundColor: Colors.grey,
-                    radius: 24,
-                    child: friend['url']!.isEmpty
-                        ? Icon(Icons.person, color: Colors.white)
-                        : null,
+          : Column(
+              children: [
+                // 🔽 友達申請通知カード（申請がある場合のみ）
+                if (friendRequests.isNotEmpty)
+                  Card(
+                    color: Colors.grey[900],
+                    margin: EdgeInsets.all(12),
+                    child: ListTile(
+                      leading: Stack(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: Colors.yellowAccent,
+                            child: Icon(Icons.person_add, color: Colors.black),
+                          ),
+                          // 🔽 バッジ表示
+                          Positioned(
+                            right: 0,
+                            child: Container(
+                              padding: EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                friendRequests.length.toString(),
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      title: Text(
+                        '友達申請が${friendRequests.length}件あります',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      trailing: Icon(Icons.chevron_right, color: Colors.white),
+                      onTap: () {
+                        // 🔽 申請一覧ページなどに遷移
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //       builder: (context) => FriendRequestScreen(
+                        //           requests: friendRequests)),
+                        // );
+                      },
+                    ),
                   ),
-                  title: Text(
-                    friend['name']!,
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+
+                // 🔽 友達リスト本体
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: friendLists.length,
+                    separatorBuilder: (context, index) =>
+                        Divider(color: Colors.grey[700]),
+                    itemBuilder: (context, index) {
+                      final friend = friendLists[index];
+                      return ListTile(
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        leading: CircleAvatar(
+                          backgroundImage: friend['url']!.isNotEmpty
+                              ? NetworkImage(friend['url']!)
+                              : null,
+                          backgroundColor: Colors.grey,
+                          radius: 24,
+                          child: friend['url']!.isEmpty
+                              ? Icon(Icons.person, color: Colors.white)
+                              : null,
+                        ),
+                        title: Text(
+                          friend['name']! != ""
+                              ? friend["name"]!
+                              : "Not defined",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                        trailing:
+                            Icon(Icons.chevron_right, color: Colors.white),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => otherProfileScreen(
+                                  deviceId: friend['deviceId']!),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
-                  trailing: Icon(Icons.chevron_right, color: Colors.white),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => otherProfileScreen(
-                              deviceId: friend['deviceId']!)),
-                    );
-                  },
-                );
-              },
+                ),
+              ],
             ),
     );
   }

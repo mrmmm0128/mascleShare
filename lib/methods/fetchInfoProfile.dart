@@ -20,9 +20,6 @@ Future<Map<String, dynamic>> fetchInfo() async {
           "url": data["photo"]?.toString() ?? "",
           "name": data["name"]?.toString() ?? "",
           "startDay": data["startDay"]?.toString() ?? "",
-          "bench": data["bench"] ?? 0,
-          "dead": data["dead"] ?? 0,
-          "squat": data["squat"] ?? 0,
           "height": data["height"] ?? 0,
           "weight": data["weight"] ?? 0,
         };
