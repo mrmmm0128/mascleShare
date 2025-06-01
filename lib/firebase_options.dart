@@ -60,11 +60,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBqiNa-uKqFB96vmXmTx1wzyTOqmt1RnqI',
-    appId: '1:362152912464:ios:693cd25210cb6d2103d355',
+    appId: '1:362152912464:ios:74be6dd732e2206503d355',
     messagingSenderId: '362152912464',
     projectId: 'muscleshare-b34dd',
     storageBucket: 'muscleshare-b34dd.firebasestorage.app',
-    iosBundleId: 'com.example.muscleShare',
+    iosBundleId: 'com.example.muscleshare',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
