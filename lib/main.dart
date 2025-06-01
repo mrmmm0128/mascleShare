@@ -15,12 +15,60 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("💬 BG通知受信: ${message.messageId}");
 }
 
+Future<void> setupFirebaseMessaging() async {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  // 1. 通知の許可をリクエスト
+  NotificationSettings settings = await messaging.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+
+  print('User granted permission: ${settings.authorizationStatus}');
+
+  // 2. 許可が得られた場合のみトークンを取得
+  if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+      settings.authorizationStatus == AuthorizationStatus.provisional) {
+    try {
+      // APNSトークンを明示的に取得してみる（デバッグ用）
+      String? apnsToken = await messaging.getAPNSToken();
+      print("APNS Token: $apnsToken"); // これが null でないか確認
+
+      if (apnsToken != null) {
+        String? fcmToken = await messaging.getToken();
+        print("Firebase Messaging Token: $fcmToken");
+        // ここで fcmToken をサーバーに送信するなどの処理
+      } else {
+        print("APNS token was null. FCM token cannot be generated.");
+        // APNSトークンが取得できない場合の処理や再試行ロジックを検討
+      }
+    } catch (e) {
+      print("Error getting token: $e");
+    }
+  } else {
+    print('User declined or has not accepted permission');
+  }
+}
+
+// アプリの初期化時に呼び出す
+// 例: void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp();
+//   await setupFirebaseMessaging(); // ★呼び出し
+//   runApp(MyApp());
+// }
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
+  await setupFirebaseMessaging();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // 🔔 通知チャネル初期化（iOS/Android両方に必要）

@@ -12,6 +12,7 @@ import 'package:muscle_share/pages/myWorkout.dart';
 import 'package:muscle_share/pages/otherProfile.dart';
 import 'package:muscle_share/pages/profile.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:muscle_share/pages/push_page.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -274,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ProfileScreen()),
+              MaterialPageRoute(builder: (context) => PushPage()),
             );
           },
         ),
