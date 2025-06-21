@@ -1,19 +1,22 @@
-// home_screen.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:muscle_share/methods/fetchPhoto.dart';
-import 'package:muscle_share/methods/getDeviceId.dart';
-import 'package:muscle_share/methods/savaData.dart';
-import 'package:muscle_share/methods/updatephotoInfo.dart';
+import 'package:muscle_share/methods/AddCommentLike.dart';
+import 'package:muscle_share/methods/FetchPhoto.dart';
+import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/SavaData.dart';
+import 'package:muscle_share/methods/UpdatephotoInfo.dart';
+import 'package:muscle_share/pages/CommentSheet.dart';
+//import 'package:muscle_share/pages/CommunityPage.dart';
 import 'package:muscle_share/pages/FIndBroScreen.dart';
 import 'package:muscle_share/pages/FriendListScreen.dart';
-import 'package:muscle_share/pages/myWorkout.dart';
+import 'package:muscle_share/pages/ToolSelectionScreen.dart';
+import 'package:muscle_share/pages/MyWorkout.dart';
 import 'package:muscle_share/pages/otherProfile.dart';
 import 'package:muscle_share/pages/profile.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:muscle_share/pages/push_page.dart';
+//import 'package:muscle_share/pages/push_page.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -21,20 +24,36 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  List<Map<String, Map<String, String>>> originPhotoList = [];
-  List<Map<String, Map<String, String>>> photoList = [];
+  List<Map<String, Map<String, dynamic>>> originPhotoList = [];
+  List<Map<String, Map<String, dynamic>>> photoList = [];
 
   String selectedCategory = 'All';
   String deviceId = "";
   bool isPrivateMode = true;
-  final List<String> categories = ['All', 'Chest', 'Back', 'Legs', 'Arms'];
-  List<Map<String, Map<String, String>>> originMatchingValues = [];
-  List<Map<String, Map<String, String>>> matchingValues = [];
-  late List<bool> showHearts;
+
+  static final List<String> categories = [
+    'All',
+    'Chest',
+    'Back',
+    'Legs',
+    'Arms',
+    "Shoulder",
+    "hip",
+    "Aerobic",
+    "Upper body",
+    "Lower body",
+    "push",
+    "pull"
+  ];
+
+  List<Map<String, Map<String, dynamic>>> originMatchingValues = [];
+  List<Map<String, Map<String, dynamic>>> matchingValues = [];
   late List<AnimationController> controllers;
   late List<Animation<double>> scaleAnimations;
   bool isLoading = true;
   List<String> deviceIds = [];
+  List<List<String>> likeDeviceId = [];
+  List<bool> isLiked = [];
 
   @override
   void initState() {
@@ -44,37 +63,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> initialize() async {
     await fetchPhotos();
-    final length = photoList.length;
-    showHearts = List.generate(length, (_) => false);
-    controllers = List.generate(length, (i) {
-      final controller = AnimationController(
-        duration: const Duration(milliseconds: 400),
-        vsync: this,
-      );
-      controller.addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          Future.delayed(const Duration(milliseconds: 400), () {
-            if (mounted) {
-              setState(() => showHearts[i] = false);
-              controller.reset();
-            }
-          });
-        }
-        print(controllers);
-      });
-      return controller;
-    });
-
-    scaleAnimations = controllers.map((controller) {
-      return Tween<double>(begin: 0.0, end: 1.4).animate(
-        CurvedAnimation(parent: controller, curve: Curves.elasticOut),
-      );
-    }).toList();
+    print(deviceId);
+    // final length = photoList.length;
   }
 
   Future<void> fetchPhotos() async {
     originMatchingValues = [];
-    deviceId = await getDeviceUUID(); // デバイス ID を取得
+    deviceId = await getDeviceIDweb(); // デバイス ID を取得
 
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
         .collection(deviceId)
@@ -100,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       print(deviceIds);
     }
 
-    List<Map<String, Map<String, String>>> photos = await fetchTodayphoto();
+    List<Map<String, Map<String, dynamic>>> photos = await fetchTodayphoto();
 
     for (var photo in photos) {
       if (deviceIds.contains(photo.values.first["deviceId"]) &&
@@ -108,7 +103,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               element.values.first["url"] == photo.values.first["url"])) {
         originMatchingValues.add(photo);
       }
+      if (photo.values.first["like"] is List) {
+        List<String> likeList = (photo.values.first["like"] as List)
+            .where((e) => e is String)
+            .cast<String>()
+            .toList();
+
+        likeDeviceId.add(likeList);
+
+        if (likeList.contains(deviceId)) {
+          isLiked.add(true);
+        } else {
+          isLiked.add(false);
+        }
+      }
     }
+
+    print(isLiked);
+    print(likeDeviceId);
 
     setState(() {
       originPhotoList = photoList = photos;
@@ -136,39 +148,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final picker = ImagePicker();
 
     try {
-      await showDialog<void>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            contentPadding: EdgeInsets.all(16),
-            backgroundColor: Colors.grey[700],
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 参考写真（assetsに画像を用意）
-                Image.asset(
-                  'icons/upper-body.png',
-                  fit: BoxFit.fitHeight,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  '毎日同じような角度で写真を撮りましょう。\n成長が分かりやすくなります。',
-                  style: TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                child: Text('写真撮影', style: TextStyle(color: Colors.white)),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          );
-        },
-      );
       final XFile? pickedFile =
           await picker.pickImage(source: ImageSource.camera);
 
@@ -210,11 +189,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _onTap(int index) {
-    setState(() => showHearts[index] = true);
-    controllers[index].forward();
-  }
-
   void _showActionSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -231,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 leading: Icon(Icons.camera_alt,
                     color: Color.fromARGB(255, 209, 209, 0)),
                 title: Text(
-                  '写真を撮る',
+                  'Take a photo',
                   style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
                 ),
                 onTap: () {
@@ -241,10 +215,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               ListTile(
                 leading:
-                    Icon(Icons.group, color: Color.fromARGB(255, 209, 209, 0)),
+                    Icon(Icons.person, color: Color.fromARGB(255, 209, 209, 0)),
                 title: Text(
-                  'find your bro',
-                  style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                  'Find your bro',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 209, 209, 0),
+                  ),
                 ),
                 onTap: () {
                   Navigator.push(
@@ -253,11 +229,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   );
                 },
               ),
+              // ListTile(
+              //   leading:
+              //       Icon(Icons.group, color: Color.fromARGB(255, 209, 209, 0)),
+              //   title: Text(
+              //     'コミュニティ',
+              //     style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+              //   ),
+              //   onTap: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(
+              //           builder: (context) => CommunityPage(userId: deviceId)),
+              //     );
+              //   },
+              // ),
               ListTile(
                 leading:
                     Icon(Icons.group, color: Color.fromARGB(255, 209, 209, 0)),
                 title: Text(
-                  '友達リストを確認する',
+                  'Friend list',
                   style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
                 ),
                 onTap: () {
@@ -265,10 +256,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   _viewFriendList(); // 追加関数（下で定義）
                 },
               ),
+              ListTile(
+                leading: Icon(Icons.model_training,
+                    color: Color.fromARGB(255, 209, 209, 0)),
+                title: Text(
+                  'Tool for recording',
+                  style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                ),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ToolSelectionScreen()));
+                },
+              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  void _showCommentSheet(BuildContext context, String uniqueKey) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => CommentSheet(
+        uniqueKey: uniqueKey,
+      ),
     );
   }
 
@@ -283,10 +302,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 209, 209, 0),
+        backgroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.account_circle, color: Colors.black, size: 30),
+          icon: Icon(Icons.account_circle,
+              color: const Color.fromARGB(255, 209, 209, 0), size: 30),
           onPressed: () {
             Navigator.push(
               context,
@@ -297,13 +317,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         title: Center(
           child: Text(
             'Today',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: const Color.fromARGB(255, 209, 209, 0),
+                fontWeight: FontWeight.bold),
           ),
         ),
         actions: [
           IconButton(
-            icon:
-                Icon(Icons.date_range_outlined, color: Colors.black, size: 30),
+            icon: Icon(Icons.date_range_outlined,
+                color: Color.fromARGB(255, 209, 209, 0), size: 30),
             onPressed: () {
               // Implement search logic
               Navigator.push(
@@ -626,7 +648,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         return Padding(
                           padding: const EdgeInsets.all(8),
                           child: photoList[index].values.first["isPrivate"]! ==
-                                  "false"
+                                      "false" &&
+                                  photoList[index].values.first["deviceId"]! !=
+                                      deviceId
                               ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -727,7 +751,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       child: Material(
                                         color: Colors.transparent,
                                         child: InkWell(
-                                          onDoubleTap: () => _onTap(index),
                                           child: Stack(
                                             alignment: Alignment.center,
                                             children: [
@@ -742,25 +765,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                 fit: BoxFit.cover,
                                                 child: Container(),
                                               ),
-                                              if (showHearts[index])
-                                                ScaleTransition(
-                                                  scale: scaleAnimations[index],
-                                                  child: Icon(
-                                                    Icons.favorite,
-                                                    color:
-                                                        Colors.amber.shade600,
-                                                    size: 100,
-                                                    shadows: [
-                                                      Shadow(
-                                                        blurRadius: 10,
-                                                        color: Colors.black
-                                                            .withOpacity(0.4),
-                                                        offset:
-                                                            const Offset(2, 4),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
                                             ],
                                           ),
                                         ),
@@ -769,23 +773,105 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
                                     const SizedBox(height: 8),
 
-                                    // 📝 キャプション
+                                    // 👍❤️ コメントアイコン＆カウント
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 10),
-                                      child: Text(
-                                        photoList[index]
-                                                .values
-                                                .first['caption'] ??
-                                            '',
-                                        style: const TextStyle(
-                                          color:
-                                              Color.fromARGB(255, 209, 209, 0),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 10),
+                                                child: Text(
+                                                  photoList[index]
+                                                          .values
+                                                          .first['caption'] ??
+                                                      '',
+                                                  style: const TextStyle(
+                                                    color: Color.fromARGB(
+                                                        255, 209, 209, 0),
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            children: [
+                                              IconButton(
+                                                  icon: Icon(
+                                                    Icons.favorite,
+                                                    color: isLiked[index]
+                                                        ? Colors.red
+                                                        : Colors.white70,
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      AddCommentLike.editLike(
+                                                          deviceId,
+                                                          likeDeviceId[index],
+                                                          photoList[index]
+                                                              .keys
+                                                              .first);
+
+                                                      if (isLiked[index]) {
+                                                        isLiked[index] = false;
+                                                        likeDeviceId[index]
+                                                            .remove(deviceId);
+                                                        print(likeDeviceId);
+                                                      } else {
+                                                        isLiked[index] = true;
+                                                        likeDeviceId[index]
+                                                            .add(deviceId);
+                                                        print(likeDeviceId);
+                                                      }
+                                                    });
+                                                  }),
+                                              Text(
+                                                '${likeDeviceId[index].length}',
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.comment,
+                                                    color: Colors.white70),
+                                                onPressed: () {
+                                                  _showCommentSheet(
+                                                      context,
+                                                      photoList[index]
+                                                          .keys
+                                                          .first);
+                                                  setState(() {
+                                                    photoList;
+                                                  });
+                                                },
+                                              ),
+                                              Text(
+                                                '${photoList[index].values.first["comment"].length}',
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ),
+
+                                    const SizedBox(
+                                      height: 8,
+                                    ),
+
+                                    // 📝 キャプション
 
                                     const SizedBox(height: 8),
                                   ],
@@ -798,6 +884,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
+          const SizedBox(
+            height: 35,
+          )
         ],
       ),
       floatingActionButton: FloatingActionButton(

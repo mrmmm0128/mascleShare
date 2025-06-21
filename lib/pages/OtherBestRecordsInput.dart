@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:muscle_share/methods/fetchInfoProfile.dart';
+import 'package:muscle_share/methods/FetchInfoProfile.dart';
 
 class OtherBestRecordsInput extends StatefulWidget {
   final String deviceId; // ← 受け取りたい変数

@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:muscle_share/methods/getDeviceId.dart';
+import 'package:muscle_share/methods/GetDeviceId.dart';
 
 Future<void> updatePhotoInfo(BuildContext context, String uniqueKey) async {
   try {
-    String deviceId = await getDeviceUUID();
+    String deviceId = await getDeviceIDweb();
     String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     // 🔁 まず現在の info ドキュメントを取得
@@ -54,7 +54,7 @@ Future<void> updatePhotoInfo(BuildContext context, String uniqueKey) async {
 }
 
 Future<void> deletePhoto(String uniqueKey) async {
-  String deviceId = await getDeviceUUID();
+  String deviceId = await getDeviceIDweb();
   String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
   final docRef = FirebaseFirestore.instance.collection(deviceId).doc("info");

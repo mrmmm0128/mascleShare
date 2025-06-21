@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:muscle_share/methods/fetchInfoProfile.dart';
-import 'package:muscle_share/methods/getDeviceId.dart';
-import 'package:muscle_share/methods/saveDataForProfile.dart';
+import 'package:muscle_share/methods/FetchInfoProfile.dart';
+import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/SaveDataForProfile.dart';
 
 class BestRecordsInputScreen extends StatefulWidget {
   @override
@@ -20,7 +20,7 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
   }
 
   Future<void> initialize() async {
-    String deviceId = await getDeviceUUID();
+    String deviceId = await getDeviceIDweb();
     final data = await fetchBestRecords(deviceId);
     // 各部位がなければ空リストで初期化
 

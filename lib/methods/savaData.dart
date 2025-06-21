@@ -76,12 +76,13 @@ Future<void> savePhotoWeb(
       uniqueKey: {
         "photo": imageUrl,
         "caption": caption,
-        "comment": "",
         "icon": icon,
         "deviceId": deviceId,
         "name": name,
         "mascle": mascle,
-        "stringisPrivate": stringisPublic
+        "stringisPrivate": stringisPublic,
+        "like": [],
+        "comment": [],
       }
     }, SetOptions(merge: true));
 
