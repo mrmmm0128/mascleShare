@@ -56,7 +56,11 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
   @override
   void initState() {
     super.initState();
-    deviceId = getDeviceIDweb();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    deviceId = await getDeviceUUID();
     loadTemplates();
   }
 

@@ -20,7 +20,7 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
   }
 
   Future<void> initialize() async {
-    String deviceId = await getDeviceIDweb();
+    String deviceId = await getDeviceUUID();
     final data = await fetchBestRecords(deviceId);
     // 各部位がなければ空リストで初期化
 

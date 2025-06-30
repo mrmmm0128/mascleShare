@@ -32,7 +32,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
   @override
   void initState() {
     super.initState();
-    deviceId = getDeviceIDweb();
+    initialize();
     localExercises = List.from(widget.exercises);
     for (String exercise in localExercises) {
       setCounts[exercise] = 1;
@@ -41,6 +41,10 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
       ];
     }
     loadDraft();
+  }
+
+  Future<void> initialize() async {
+    deviceId = await getDeviceUUID();
   }
 
   void loadDraft() async {

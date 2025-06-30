@@ -16,7 +16,11 @@ class _HistoryRecording extends State<HistoryRecording> {
   @override
   void initState() {
     super.initState();
-    deviceId = getDeviceIDweb();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    deviceId = await getDeviceUUID();
   }
 
   @override

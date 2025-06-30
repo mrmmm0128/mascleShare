@@ -41,7 +41,7 @@ class _otherProfileScreenState extends State<confirmOtherProfileScreen> {
 
   Future<void> initializeProfile() async {
     infoList = await fetchOtherInfo(widget.deviceId);
-    myDeviceId = await getDeviceIDweb();
+    myDeviceId = await getDeviceUUID();
 
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
         .collection(myDeviceId)

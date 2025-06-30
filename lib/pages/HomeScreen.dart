@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> fetchPhotos() async {
     originMatchingValues = [];
-    deviceId = await getDeviceIDweb(); // デバイス ID を取得
+    deviceId = await getDeviceUUID(); // デバイス ID を取得
 
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
         .collection(deviceId)
