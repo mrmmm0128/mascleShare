@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-Future<List<Map<String, Map<String, String>>>> fetchTodayphoto() async {
-  List<Map<String, Map<String, String>>> photoList = [];
+Future<List<Map<String, Map<String, dynamic>>>> fetchTodayphoto() async {
+  List<Map<String, Map<String, dynamic>>> photoList = [];
   String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
   print(dateKey);
   try {
@@ -28,6 +28,8 @@ Future<List<Map<String, Map<String, String>>>> fetchTodayphoto() async {
                 "name": entry.value["name"] ?? "",
                 "deviceId": entry.value["deviceId"],
                 "isPrivate": entry.value["stringisPrivate"],
+                "like": entry.value["like"] ?? [],
+                "comment": entry.value["comment"] ?? []
               }
             });
           }

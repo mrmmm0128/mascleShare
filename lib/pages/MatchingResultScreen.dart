@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:muscle_share/methods/GetDeviceId.dart';
 import 'package:muscle_share/pages/otherProfile.dart';
 
 class MatchingResultScreen extends StatefulWidget {
-  final String? selectedOption;
+  final List<String>? selectedOptions;
   final String? selectedPrefecture;
   final String? selectedCity;
 
@@ -13,9 +14,10 @@ class MatchingResultScreen extends StatefulWidget {
   final int? minWeight;
   final int? maxYear;
   final int? minYear;
+  final String? searchDeviceId;
 
   MatchingResultScreen(
-      {this.selectedOption,
+      {this.selectedOptions,
       this.selectedPrefecture,
       this.selectedCity,
       this.maxHeight,
@@ -23,7 +25,8 @@ class MatchingResultScreen extends StatefulWidget {
       this.minHeight,
       this.minWeight,
       this.maxYear,
-      this.minYear});
+      this.minYear,
+      this.searchDeviceId});
 
   @override
   _MatchingResultScreenState createState() => _MatchingResultScreenState();
@@ -32,6 +35,7 @@ class MatchingResultScreen extends StatefulWidget {
 class _MatchingResultScreenState extends State<MatchingResultScreen> {
   List<Map<String, dynamic>> userList = [];
   bool _isLoading = true;
+  String myDeviceId = "";
 
   @override
   void initState() {
@@ -40,6 +44,8 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
   }
 
   Future<void> _fetchFilteredProfiles() async {
+    myDeviceId = await getDeviceIDweb();
+
     try {
       final snapshot =
           await FirebaseFirestore.instance.collection("user_list").get();
@@ -47,66 +53,88 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
       final filtered = snapshot.docs
           .where((doc) =>
               !doc.id.contains("date") && doc.id != "training_together")
-          .take(10)
+          .take(40)
           .toList();
 
       List<Map<String, dynamic>> results = [];
 
-      for (final doc in filtered) {
+      if (widget.searchDeviceId?.isEmpty ?? true) {
+        // widget.searchDeviceId が null または 空 の場合
+        for (final doc in filtered) {
+          final profileDoc = await FirebaseFirestore.instance
+              .collection(doc.id)
+              .doc("profile")
+              .get();
+
+          final data = profileDoc.data();
+          if (data != null) {
+            bool matches = true;
+
+            // 身長・体重条件のチェック
+            if (widget.selectedOptions!.contains("身長・体重が近い人")) {
+              final height = data["height"];
+              final weight = data["weight"];
+              if (height == null ||
+                  weight == null ||
+                  height < widget.minHeight ||
+                  height > widget.maxHeight ||
+                  weight < widget.minWeight ||
+                  weight > widget.maxWeight) {
+                matches = false;
+              }
+            }
+
+            // 筋トレ歴のチェック
+            if (widget.selectedOptions!.contains("筋トレ歴が近い人")) {
+              final startDay = data["startDay"];
+              if (startDay != null && startDay is String) {
+                try {
+                  final startDate = DateTime.parse(startDay);
+                  final now = DateTime.now();
+                  final years = now.difference(startDate).inDays ~/ 365;
+
+                  if (years < widget.minYear! || years > widget.maxYear!) {
+                    matches = false;
+                  }
+                } catch (e) {
+                  print("❌ startDayの解析に失敗しました: $e");
+                  matches = false;
+                }
+              } else {
+                matches = false;
+              }
+            }
+
+            // 条件を満たしたら追加
+            if (matches) {
+              results.add({
+                "deviceId": doc.id,
+                "name": data["name"] ?? "",
+                "photo": data["photo"] ?? "",
+                "height": data["height"] ?? 0,
+                "weight": data["weight"] ?? 0,
+                "startDay": data["startDay"] ?? "",
+              });
+            }
+          }
+        }
+      } else if (widget.searchDeviceId != null) {
+        // widget.searchDeviceId が null でない場合
         final profileDoc = await FirebaseFirestore.instance
-            .collection(doc.id)
+            .collection(widget.searchDeviceId!)
             .doc("profile")
             .get();
 
         final data = profileDoc.data();
         if (data != null) {
-          if (widget.selectedOption == "身長・体重が近い人") {
-            if (data["height"] != null &&
-                data["weight"] != null &&
-                data["height"] >= widget.minHeight &&
-                data["height"] <= widget.maxHeight &&
-                data["weight"] >= widget.minWeight &&
-                data["weight"] <= widget.maxWeight) {
-              results.add({
-                "deviceId": doc.id,
-                "name": data["name"] ?? "",
-                "photo": data["photo"] ?? "",
-                "height": data["height"],
-                "weight": data["weight"],
-                "startDay": data["startDay"] ?? "",
-              });
-            }
-          } else if (widget.selectedOption == "筋トレ歴が近い人") {
-            if (data["startDay"] != null && data["startDay"] is String) {
-              try {
-                DateTime startDate = DateTime.parse(data["startDay"]);
-                DateTime now = DateTime.now();
-                int years = now.difference(startDate).inDays ~/ 365;
-
-                if (years >= widget.minYear! && years <= widget.maxYear!) {
-                  results.add({
-                    "deviceId": doc.id,
-                    "name": data["name"] ?? "",
-                    "photo": data["photo"] ?? "",
-                    "height": data["height"] ?? 0,
-                    "weight": data["weight"] ?? 0,
-                    "startDay": data["startDay"],
-                  });
-                }
-              } catch (e) {
-                print("❌ startDayの解析に失敗しました: $e");
-              }
-            }
-          } else {
-            results.add({
-              "deviceId": doc.id,
-              "name": data["name"] ?? "",
-              "photo": data["photo"] ?? "",
-              "height": data["height"] ?? 0,
-              "weight": data["weight"] ?? 0,
-              "startDay": data["startDay"] ?? "",
-            });
-          }
+          results.add({
+            "deviceId": widget.searchDeviceId!,
+            "name": data["name"] ?? "",
+            "photo": data["photo"] ?? "",
+            "height": data["height"] ?? 0,
+            "weight": data["weight"] ?? 0,
+            "startDay": data["startDay"] ?? "",
+          });
         }
       }
 
@@ -118,6 +146,7 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
       print("❌ エラー: $e");
       setState(() => _isLoading = false);
     }
+    print(userList);
   }
 
   @override
@@ -125,10 +154,12 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 209, 209, 0),
+        backgroundColor: Colors.black,
         title: Text("Result research",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        iconTheme: IconThemeData(color: Colors.black),
+            style: TextStyle(
+                color: Color.fromARGB(255, 209, 209, 0),
+                fontWeight: FontWeight.bold)),
+        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: Colors.yellowAccent))
@@ -136,39 +167,48 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
               itemCount: userList.length,
               itemBuilder: (context, index) {
                 final user = userList[index];
-                return Card(
-                  color: Colors.grey[900],
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    leading: user["photo"] != ""
-                        ? CircleAvatar(
-                            backgroundImage: NetworkImage(user["photo"]),
-                            radius: 28,
-                          )
-                        : CircleAvatar(
-                            child: Icon(Icons.person, color: Colors.black),
-                            backgroundColor: Colors.yellowAccent,
-                            radius: 28,
+
+                return myDeviceId != user["deviceId"]
+                    ? Card(
+                        color: Colors.grey[900],
+                        margin:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: ListTile(
+                          leading: user["photo"] != ""
+                              ? CircleAvatar(
+                                  backgroundImage: NetworkImage(user["photo"]),
+                                  radius: 28,
+                                )
+                              : CircleAvatar(
+                                  child:
+                                      Icon(Icons.person, color: Colors.black),
+                                  backgroundColor: Colors.yellowAccent,
+                                  radius: 28,
+                                ),
+                          title: Text(
+                            user["name"] != "" ? user["name"] : "Not defined",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
                           ),
-                    title: Text(
-                      user["name"] != "" ? user["name"] : "Not defined",
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      "身長: ${user["height"]} cm  体重: ${user["weight"]} kg",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    trailing: Icon(Icons.chevron_right, color: Colors.white),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => otherProfileScreen(
-                                  deviceId: user["deviceId"])));
-                    },
-                  ),
-                );
+                          subtitle: Text(
+                            "身長: ${user["height"]} cm  体重: ${user["weight"]} kg",
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          trailing:
+                              Icon(Icons.chevron_right, color: Colors.white),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => otherProfileScreen(
+                                    deviceId: user["deviceId"]),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : const SizedBox();
               },
             ),
     );

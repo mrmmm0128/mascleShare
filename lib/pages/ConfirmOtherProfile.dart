@@ -2,24 +2,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:muscle_share/methods/AddFriendMethod.dart';
 import 'package:muscle_share/methods/PhotoSelect.dart';
-import 'package:muscle_share/methods/fetchInfoProfile.dart';
-import 'package:muscle_share/methods/getDeviceId.dart';
+import 'package:muscle_share/methods/FetchInfoProfile.dart';
+import 'package:muscle_share/methods/GetDeviceId.dart';
 import 'package:muscle_share/pages/OtherBestRecordsInput.dart';
 import 'package:muscle_share/pages/profile.dart';
 
-class otherProfileScreen extends StatefulWidget {
+class confirmOtherProfileScreen extends StatefulWidget {
   final String deviceId; // ← 受け取りたい変数
 
-  const otherProfileScreen(
+  const confirmOtherProfileScreen(
       {super.key, required this.deviceId}); // ← コンストラクタで受け取る
 
   @override // 👈 忘れずに！
   _otherProfileScreenState createState() => _otherProfileScreenState();
 }
 
-class _otherProfileScreenState extends State<otherProfileScreen> {
+class _otherProfileScreenState extends State<confirmOtherProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   late Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
@@ -142,62 +141,6 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
                     ),
                   ),
 
-                  request.contains(myDeviceId) || sentRequestNow
-                      ? SizedBox(
-                          height: 16,
-                          child: Text(
-                            "友達申請済みです。",
-                            style: TextStyle(
-                                color: Color.fromARGB(255, 209, 209, 0),
-                                fontWeight: FontWeight.bold),
-                          ),
-                        )
-                      : deviceIds.contains(widget.deviceId) ||
-                              widget.deviceId == myDeviceId
-                          ? SizedBox(
-                              height: 16,
-                              child: Text(
-                                "既に友達です",
-                                style: TextStyle(
-                                    color: Color.fromARGB(255, 209, 209, 0),
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            )
-                          : Center(
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  // 友達申請を送る
-                                  requestFrend(widget.deviceId, myDeviceId);
-
-                                  // 友達申請送信後にメッセージを表示
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('友達申請を送りました'),
-                                      backgroundColor:
-                                          Colors.green, // 背景色（任意で変更）
-                                    ),
-                                  );
-
-                                  setState(() {
-                                    sentRequestNow = true;
-                                  });
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.black,
-                                  foregroundColor:
-                                      Color.fromARGB(255, 209, 209, 0),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 32, vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: BorderSide(
-                                        color:
-                                            Color.fromARGB(255, 209, 209, 0)),
-                                  ),
-                                ),
-                                child: Text("友達追加"),
-                              ),
-                            ),
                   const SizedBox(
                     height: 16,
                   ),

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:muscle_share/methods/PhotoCropper.dart';
 import 'package:muscle_share/methods/PhotoSelect.dart';
-import 'package:muscle_share/methods/fetchInfoProfile.dart';
-import 'package:muscle_share/methods/getDeviceId.dart';
-import 'package:muscle_share/methods/saveDataForProfile.dart';
+import 'package:muscle_share/methods/FetchInfoProfile.dart';
+import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/SaveDataForProfile.dart';
 import 'package:muscle_share/pages/BestRecordsInput.dart';
 import 'package:muscle_share/data/PreAndCity.dart';
 
@@ -16,12 +16,10 @@ class ProfileScreen extends StatefulWidget {
 
 class ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
-  // final TextEditingController _benchController = TextEditingController();
-  // final TextEditingController _deadController = TextEditingController();
-  // final TextEditingController _squatController = TextEditingController();
+  final TextEditingController _idController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  late Uint8List imageBytes = Uint8List(0); // 空のバイト列で初期化
-  late XFile? pickedFile = null; // nullで初期化
+  late Uint8List imageBytes = Uint8List(0);
+  XFile? pickedFile;
   String deviceId = "";
   late Map<String, dynamic> infoList = {};
   bool _isLoading = true;
@@ -31,11 +29,10 @@ class ProfileScreenState extends State<ProfileScreen> {
   int? _selectedWeight;
   final List<int> _weightOptions =
       List.generate(121, (index) => 30 + index); // 30〜150kg
-
   bool enableGatoure = false;
-
   String? selectedPrefecture;
   String? selectedCity;
+  late String originId;
 
   final Map<String, List<String>> prefectureData = PreAndCity.data;
 
@@ -46,22 +43,25 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> initializeProfile() async {
-    deviceId = await getDeviceUUID();
+    deviceId = getDeviceIDweb();
     infoList = await fetchInfo();
+
     setState(() {
       _nameController.text = infoList["name"] ?? "";
       _dateController.text = infoList["startDay"] ?? "";
       _selectedHeight = infoList["height"] as int?;
       _selectedWeight = infoList["weight"] as int?;
-
+      _idController.text = infoList["id"] ?? "";
+      originId = infoList["id"] ?? "";
       _isLoading = false;
+      pickedFile = null;
     });
   }
 
   // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    deviceId = await getDeviceUUID(); // デバイス ID を取得
+    deviceId = getDeviceIDweb(); // デバイス ID を取得
 
     try {
       pickedFile = await picker.pickImage(source: ImageSource.camera);
@@ -99,7 +99,7 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   Widget buildSectionCard({required String title, required Widget child}) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       child: SizedBox(
         width: double.infinity, // 横幅いっぱいに広げる
         child: Card(
@@ -134,12 +134,16 @@ class ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 209, 209, 0),
+        backgroundColor: Colors.black,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
-        title: Text(
-          'Profile',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        iconTheme: IconThemeData(color: const Color.fromARGB(255, 209, 209, 0)),
+        title: Center(
+          child: Text(
+            'Profile',
+            style: TextStyle(
+                color: const Color.fromARGB(255, 209, 209, 0),
+                fontWeight: FontWeight.bold),
+          ),
         ),
       ),
       backgroundColor: Colors.black,
@@ -225,14 +229,32 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   buildSectionCard(
+                    title: "Your Id",
+                    child: TextField(
+                      controller: _idController,
+                      style: TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: "英数字８文字以上で、Idを入力してください",
+                        prefixIcon: Icon(Icons.person),
+                        filled: true,
+                        fillColor: Colors.grey[900],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  buildSectionCard(
                     title: "User Name",
                     child: TextField(
                       controller: _nameController,
+                      style: TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: "Enter your name",
                         prefixIcon: Icon(Icons.person),
                         filled: true,
-                        fillColor: Colors.grey[400],
+                        fillColor: Colors.grey[900],
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -258,11 +280,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                       child: AbsorbPointer(
                         child: TextField(
                           controller: _dateController,
+                          style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: 'Enter your start day of muscle training',
                             prefixIcon: Icon(Icons.calendar_today),
                             filled: true,
-                            fillColor: Colors.grey[400],
+                            fillColor: Colors.grey[900],
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -287,7 +310,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           height: 16,
                         ),
                         DropdownButtonFormField<int>(
-                          value: _weightOptions.contains(_selectedHeight)
+                          value: _heightOptions.contains(_selectedHeight)
                               ? _selectedHeight
                               : null,
                           items: _heightOptions.map((height) {
@@ -296,11 +319,13 @@ class ProfileScreenState extends State<ProfileScreen> {
                               child: Text('$height cm'),
                             );
                           }).toList(),
+                          dropdownColor: Colors.grey[900],
+                          style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: 'Select your Height (kg)',
                             prefixIcon: Icon(Icons.monitor_weight),
                             filled: true,
-                            fillColor: Colors.grey[400],
+                            fillColor: Colors.grey[900],
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -325,11 +350,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                           value: _weightOptions.contains(_selectedWeight)
                               ? _selectedWeight
                               : null,
+                          dropdownColor: Colors.grey[900],
+                          style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: 'Select your weight (kg)',
+                            hintStyle: TextStyle(color: Colors.white),
                             prefixIcon: Icon(Icons.monitor_weight),
                             filled: true,
-                            fillColor: Colors.grey[400],
+                            fillColor: Colors.grey[900],
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -350,90 +378,90 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
 
-                  buildSectionCard(
-                      title: "training together",
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: enableGatoure,
-                                onChanged: (value) {
-                                  setState(() {
-                                    enableGatoure = value ?? false;
-                                  });
-                                },
-                                activeColor: Color.fromARGB(255, 209, 209, 0),
-                              ),
-                              Text(
-                                '合トレ機能を使用しますか？',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 16),
-                          if (enableGatoure) ...[
-                            Text(
-                              '希望の合トレ場所',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            SizedBox(height: 16),
-                            DropdownButtonFormField<String>(
-                              dropdownColor: Colors.black,
-                              decoration: InputDecoration(
-                                labelText: "都道府県を選択",
-                                labelStyle: TextStyle(color: Colors.white),
-                                filled: true,
-                                fillColor: Colors.grey[900],
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10)),
-                              ),
-                              value: selectedPrefecture,
-                              items: prefectureData.keys.map((String key) {
-                                return DropdownMenuItem<String>(
-                                  value: key,
-                                  child: Text(key,
-                                      style: TextStyle(color: Colors.white)),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedPrefecture = value;
-                                  selectedCity = null;
-                                });
-                              },
-                            ),
-                            SizedBox(height: 16),
-                            if (selectedPrefecture != null)
-                              DropdownButtonFormField<String>(
-                                dropdownColor: Colors.black,
-                                decoration: InputDecoration(
-                                  labelText: "市町村を選択",
-                                  labelStyle: TextStyle(color: Colors.white),
-                                  filled: true,
-                                  fillColor: Colors.grey[900],
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                ),
-                                value: selectedCity,
-                                items: prefectureData[selectedPrefecture]!
-                                    .map((city) => DropdownMenuItem<String>(
-                                          value: city,
-                                          child: Text(city,
-                                              style: TextStyle(
-                                                  color: Colors.white)),
-                                        ))
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedCity = value;
-                                  });
-                                },
-                              ),
-                          ]
-                        ],
-                      )),
+                  // buildSectionCard(
+                  //     title: "training together",
+                  //     child: Column(
+                  //       crossAxisAlignment: CrossAxisAlignment.start,
+                  //       children: [
+                  //         Row(
+                  //           children: [
+                  //             Checkbox(
+                  //               value: enableGatoure,
+                  //               onChanged: (value) {
+                  //                 setState(() {
+                  //                   enableGatoure = value ?? false;
+                  //                 });
+                  //               },
+                  //               activeColor: Color.fromARGB(255, 209, 209, 0),
+                  //             ),
+                  //             Text(
+                  //               '合トレ機能を使用しますか？',
+                  //               style: TextStyle(color: Colors.white),
+                  //             ),
+                  //           ],
+                  //         ),
+                  //         SizedBox(height: 16),
+                  //         if (enableGatoure) ...[
+                  //           Text(
+                  //             '希望の合トレ場所',
+                  //             style: TextStyle(color: Colors.white),
+                  //           ),
+                  //           SizedBox(height: 16),
+                  //           DropdownButtonFormField<String>(
+                  //             dropdownColor: Colors.black,
+                  //             decoration: InputDecoration(
+                  //               labelText: "都道府県を選択",
+                  //               labelStyle: TextStyle(color: Colors.white),
+                  //               filled: true,
+                  //               fillColor: Colors.grey[900],
+                  //               border: OutlineInputBorder(
+                  //                   borderRadius: BorderRadius.circular(10)),
+                  //             ),
+                  //             value: selectedPrefecture,
+                  //             items: prefectureData.keys.map((String key) {
+                  //               return DropdownMenuItem<String>(
+                  //                 value: key,
+                  //                 child: Text(key,
+                  //                     style: TextStyle(color: Colors.white)),
+                  //               );
+                  //             }).toList(),
+                  //             onChanged: (value) {
+                  //               setState(() {
+                  //                 selectedPrefecture = value;
+                  //                 selectedCity = null;
+                  //               });
+                  //             },
+                  //           ),
+                  //           SizedBox(height: 16),
+                  //           if (selectedPrefecture != null)
+                  //             DropdownButtonFormField<String>(
+                  //               dropdownColor: Colors.black,
+                  //               decoration: InputDecoration(
+                  //                 labelText: "市町村を選択",
+                  //                 labelStyle: TextStyle(color: Colors.white),
+                  //                 filled: true,
+                  //                 fillColor: Colors.grey[900],
+                  //                 border: OutlineInputBorder(
+                  //                     borderRadius: BorderRadius.circular(10)),
+                  //               ),
+                  //               value: selectedCity,
+                  //               items: prefectureData[selectedPrefecture]!
+                  //                   .map((city) => DropdownMenuItem<String>(
+                  //                         value: city,
+                  //                         child: Text(city,
+                  //                             style: TextStyle(
+                  //                                 color: Colors.white)),
+                  //                       ))
+                  //                   .toList(),
+                  //               onChanged: (value) {
+                  //                 setState(() {
+                  //                   selectedCity = value;
+                  //                 });
+                  //               },
+                  //             ),
+                  //         ]
+                  //       ],
+                  //     )),
 
                   buildSectionCard(
                     title: "Best Records of your training",
@@ -472,21 +500,76 @@ class ProfileScreenState extends State<ProfileScreen> {
 
                   SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () {
-                      if (_selectedHeight != null && _selectedWeight != null) {
-                        saveInfoWeb(
-                          _nameController.text,
-                          _dateController.text,
-                          deviceId,
-                          imageBytes,
-                          _selectedHeight!,
-                          _selectedWeight!,
-                        );
-                      } else {
-                        // 例えばダイアログやSnackBarでユーザーに通知する
+                    onPressed: () async {
+                      // ローディングダイアログを表示
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false, // ダイアログ外をタップしても閉じない
+                        builder: (BuildContext context) {
+                          return Center(
+                              child: CircularProgressIndicator(
+                                  color: Colors.yellowAccent));
+                        },
+                      );
+
+                      // 初期化
+                      bool _canSave = true;
+
+                      // 身長と体重が選択されていない場合
+                      if (_selectedHeight == null || _selectedWeight == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('身長と体重を入力してください')),
                         );
+                        _canSave = false;
+                      }
+
+                      // IDが8文字未満の場合
+                      if (_idController.text.length < 8) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('IDを英数字８文字以上で入力してください')),
+                        );
+                        _canSave = false;
+                      }
+
+                      // 名前が未入力の場合
+                      if (_nameController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('名前を入力してください')),
+                        );
+                        _canSave = false;
+                      }
+
+                      // 全ての条件を満たしている場合
+                      if (_canSave) {
+                        // 処理を実行（例: saveInfoWeb）
+                        int con = await saveInfoWeb(
+                            _idController.text,
+                            _nameController.text,
+                            _dateController.text,
+                            deviceId,
+                            imageBytes,
+                            _selectedHeight!,
+                            _selectedWeight!,
+                            originId);
+
+                        originId = _idController.text;
+
+                        // 処理が終わったらダイアログを閉じる
+                        Navigator.pop(context); // ダイアログを閉じる
+
+                        if (con == 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('このIDは既に使用されています')),
+                          );
+                        } else if (con == 2) {
+                          // 成功メッセージを表示
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('プロフィール情報が保存されました！')),
+                          );
+                        }
+                      } else {
+                        // 処理が無効な場合でもダイアログを閉じる
+                        Navigator.pop(context);
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -502,6 +585,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Text("変更を保存する"),
                   ),
+
                   SizedBox(height: 40),
                 ],
               ),
