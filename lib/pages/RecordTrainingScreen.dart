@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/UseTemplates.dart';
 import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RecordTrainingScreen extends StatefulWidget {
   final List<String> exercises;
@@ -18,12 +21,13 @@ class RecordTrainingScreen extends StatefulWidget {
 
 class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
   final Map<String, int> setCounts = {};
-  final Map<String, List<Map<String, int>>> exerciseData = {};
+  final Map<String, List<Map<String, dynamic>>> exerciseData = {};
   String deviceId = "";
   late List<String> localExercises;
 
   final List<int> _RepOptions = List.generate(61, (index) => index);
-  final List<int> _weightOptions = List.generate(300, (index) => index);
+  final List<double> _weightOptions =
+      List.generate(300, (index) => index * 0.5);
 
   @override
   void initState() {
@@ -36,15 +40,48 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
         {"weight": 0, "reps": 0}
       ];
     }
+    loadDraft();
+  }
+
+  void loadDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    final draftString = prefs.getString('draft_${widget.name}');
+    if (draftString != null) {
+      final Map<String, dynamic> saved = jsonDecode(draftString);
+      setState(() {
+        saved.forEach((key, value) {
+          exerciseData[key] = List<Map<String, dynamic>>.from(
+              value.map((e) => Map<String, dynamic>.from(e)));
+        });
+      });
+    }
+  }
+
+  void saveDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    final draftJson = exerciseData.map((key, value) => MapEntry(
+        key,
+        value
+            .map((set) => {
+                  "weight": set["weight"],
+                  "reps": set["reps"],
+                })
+            .toList()));
+    await prefs.setString('draft_${widget.name}', jsonEncode(draftJson));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.name),
-        backgroundColor: Colors.yellowAccent,
-        foregroundColor: Colors.black,
+        title: Text(
+          widget.name,
+          style: TextStyle(
+              color: Color.fromARGB(255, 209, 209, 0),
+              fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.black,
+        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
       ),
       backgroundColor: Colors.black,
       body: Column(
@@ -113,8 +150,11 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                                       Row(
                                         children: [
                                           Expanded(
-                                            child: DropdownButtonFormField<int>(
-                                              value: data[i]["weight"],
+                                            child:
+                                                DropdownButtonFormField<double>(
+                                              value: data[i]["weight"]
+                                                      ?.toDouble() ??
+                                                  0.0, // 型を合わせる
                                               decoration: InputDecoration(
                                                 labelText: "重量(kg)",
                                                 labelStyle: TextStyle(
@@ -128,14 +168,17 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                                                   color: Colors.white),
                                               items:
                                                   _weightOptions.map((weight) {
-                                                return DropdownMenuItem<int>(
+                                                return DropdownMenuItem<double>(
                                                   value: weight,
-                                                  child: Text('$weight kg'),
+                                                  child: Text(
+                                                      '${weight.toStringAsFixed(1)} kg'),
                                                 );
                                               }).toList(),
                                               onChanged: (val) {
                                                 setState(() {
-                                                  data[i]["weight"] = val!;
+                                                  data[i]["weight"] =
+                                                      val ?? 0.0;
+                                                  saveDraft();
                                                 });
                                               },
                                             ),
@@ -164,6 +207,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                                               onChanged: (val) {
                                                 setState(() {
                                                   data[i]["reps"] = val!;
+                                                  saveDraft();
                                                 });
                                               },
                                             ),
@@ -174,6 +218,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                                             onPressed: () {
                                               setState(() {
                                                 data.removeAt(i);
+                                                saveDraft();
                                               });
                                             },
                                           ),
@@ -189,8 +234,17 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                         TextButton.icon(
                           onPressed: () {
                             setState(() {
-                              data.add({"weight": 0, "reps": 0});
+                              if (data.isNotEmpty) {
+                                final last = data.last;
+                                data.add({
+                                  "weight": last["weight"] ?? 0,
+                                  "reps": last["reps"] ?? 0,
+                                });
+                              } else {
+                                data.add({"weight": 0, "reps": 0});
+                              }
                             });
+                            saveDraft();
                           },
                           icon: Icon(Icons.add, color: Colors.yellowAccent),
                           label: Text("セットを追加",
@@ -207,11 +261,22 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
             padding: EdgeInsets.all(16),
             child: ElevatedButton(
               onPressed: () async {
-                print(exerciseData);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('your recording has been saved')),
+                  SnackBar(content: Text('記録が保存されました。')),
                 );
-                UseTemplates.saveTraining(deviceId, widget.name, exerciseData);
+                await UseTemplates.saveTraining(
+                    deviceId, widget.name, exerciseData);
+
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove('draft_${widget.name}'); // 🔸ドラフト削除
+
+                setState(() {
+                  for (String exercise in localExercises) {
+                    exerciseData[exercise] = [
+                      {"weight": 0, "reps": 0}
+                    ];
+                  }
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.yellowAccent,
@@ -219,7 +284,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                 minimumSize: Size(MediaQuery.of(context).size.width / 6, 48),
               ),
               child: Text(
-                "save",
+                "保存する",
                 style: TextStyle(color: Colors.black),
               ),
             ),

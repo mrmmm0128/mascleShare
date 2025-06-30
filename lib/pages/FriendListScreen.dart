@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/AddFriendMethod.dart';
 import 'package:muscle_share/methods/GetDeviceId.dart';
 import 'package:muscle_share/pages/ConfirmOtherProfile.dart';
+import 'package:muscle_share/pages/FIndBroScreen.dart';
 import 'package:muscle_share/pages/otherProfile.dart';
 
 class FriendListScreen extends StatefulWidget {
@@ -12,6 +13,7 @@ class FriendListScreen extends StatefulWidget {
 
 class _FriendListScreenState extends State<FriendListScreen> {
   List<String> deviceIds = [];
+  List<String> requestDeviceIds = [];
   List<Map<String, String>> friendLists = [];
   bool _isLoading = true;
   List<Map<String, dynamic>> friendRequests = [];
@@ -79,11 +81,11 @@ class _FriendListScreenState extends State<FriendListScreen> {
       if (snapshot.exists) {
         var data = snapshot.data() as Map<String, dynamic>;
         if (data.containsKey('requested')) {
-          deviceIds = List<String>.from(data['requested']);
+          requestDeviceIds = List<String>.from(data['requested']);
         }
       }
 
-      for (String id in deviceIds) {
+      for (String id in requestDeviceIds) {
         DocumentSnapshot snapshot = await FirebaseFirestore.instance
             .collection(id)
             .doc("profile")
@@ -98,6 +100,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
           });
         }
       }
+      print(friendRequests);
 
       setState(() {
         friendRequests;
@@ -117,11 +120,13 @@ class _FriendListScreenState extends State<FriendListScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
-        title: Text(
-          'Friend List',
-          style: TextStyle(
-              color: Color.fromARGB(255, 209, 209, 0),
-              fontWeight: FontWeight.bold),
+        title: Center(
+          child: Text(
+            '友達リスト',
+            style: TextStyle(
+                color: Color.fromARGB(255, 209, 209, 0),
+                fontWeight: FontWeight.bold),
+          ),
         ),
         elevation: 0,
       ),
@@ -210,9 +215,9 @@ class _FriendListScreenState extends State<FriendListScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Text(
-                        'Find your bro and add him!',
+                        'broを探しましょう',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color.fromARGB(255, 209, 209, 0),
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -322,6 +327,32 @@ class _FriendListScreenState extends State<FriendListScreen> {
                   ),
               ],
             ),
+      floatingActionButton: TextButton.icon(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => FindBroScreen()),
+          );
+        },
+        icon: Icon(Icons.person, color: Colors.yellowAccent),
+        label: Text(
+          'bro探索',
+          style: TextStyle(
+            color: Color.fromARGB(255, 209, 209, 0),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: TextButton.styleFrom(
+          side: BorderSide(
+            color: Colors.yellowAccent, // ✅ 枠線の色
+            width: 2, // ✅ 枠線の太さ（お好みで）
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12), // ✅ 角の丸み
+          ),
+          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        ),
+      ),
     );
   }
 }

@@ -13,17 +13,16 @@ class FriendTrainingDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String templateName = training['templateName'] ?? 'Unknown Template';
     final String totalVolume = training['totalVolume'] ?? '0.0';
     final Map<String, dynamic> exercises =
-        Map<String, dynamic>.from(training['training'] ?? {});
+        Map<String, dynamic>.from(training['data'] ?? {});
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: Text(
-          "Friend's Training Details",
+          "トレーニング詳細",
           style: TextStyle(color: Colors.yellowAccent),
         ),
         elevation: 0,
@@ -85,14 +84,9 @@ class FriendTrainingDetailScreen extends StatelessWidget {
                   ),
                 ),
                 Divider(color: Colors.yellowAccent),
-                SizedBox(height: 16),
 
                 // トレーニング概要
-                Text(
-                  "Training Template: $templateName",
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
-                SizedBox(height: 8),
+
                 Text(
                   "Total Volume: $totalVolume kg·回",
                   style: TextStyle(color: Colors.white, fontSize: 18),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/UseTemplates.dart';
 import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/pages/HistoryRecording.dart';
 import 'package:muscle_share/pages/RecordTrainingScreen.dart';
-import 'package:muscle_share/pages/TrainingDetailScreen.dart';
+import 'package:muscle_share/pages/FriendTrainingTimeline.dart';
 
 class QuickInputScreen extends StatefulWidget {
   const QuickInputScreen({super.key});
@@ -171,7 +172,6 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
                         icon: Icon(Icons.arrow_drop_down, color: Colors.white),
                       ),
                     ),
-
                     SizedBox(height: 20),
                     Text("種目を選択",
                         style:
@@ -568,160 +568,160 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Quick recording",
-            style: TextStyle(
-                color: Color.fromARGB(255, 209, 209, 0),
-                fontWeight: FontWeight.bold)),
+        title: Center(
+            child: Text("トレーニング記録",
+                style: TextStyle(
+                    color: Color.fromARGB(255, 209, 209, 0),
+                    fontWeight: FontWeight.bold))),
         backgroundColor: Colors.black,
         iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _showTemplateDialog,
-          ),
-        ],
       ),
       backgroundColor: Colors.black,
       body: Column(
         children: [
-          Expanded(
-            flex: 1,
-            child: ListView.builder(
-              itemCount: templates.length,
-              itemBuilder: (context, index) {
-                final template = templates[index];
-                return Card(
-                  color: Colors.grey[900],
-                  margin: EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text(template["name"],
-                        style: TextStyle(color: Colors.white)),
-                    subtitle: Text(
-                      (template["exercises"] as List<String>).join(", "),
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.white),
-                          onPressed: () => _editTemplateDialog(index),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () =>
-                              _confirmDeleteTemplate(index), // 削除ボタン
-                        ),
-                        Icon(Icons.chevron_right, color: Colors.white),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecordTrainingScreen(
-                            exercises: template["exercises"],
-                            name: template["name"],
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => HistoryRecording()),
+                          );
+                        },
+                        icon: Icon(Icons.fitness_center),
+                        label: Text("トレーニング履歴"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[800],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16), // ✅ 丸み
                           ),
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ToolSelectionScreen()),
+                          );
+                        },
+                        icon: Icon(Icons.people),
+                        label: Text("友人のトレーニング"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[800],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16), // ✅ 丸み
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+              ],
+            ),
+          ),
+          Text("テンプレートをタップしてトレーニングを記録しよう",
+              style: TextStyle(
+                  color: Colors.grey[800],
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14)),
+          Divider(color: Colors.grey[800]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Text("テンプレート",
+                      style: TextStyle(
+                          color: Color.fromARGB(255, 209, 209, 0),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold))),
+              Padding(
+                padding: EdgeInsets.all(8),
+                child: IconButton(
+                    onPressed: () {
+                      _showTemplateDialog();
+                    },
+                    icon: Icon(
+                      Icons.add,
+                      color: Color.fromARGB(255, 209, 209, 0),
+                    )),
+              ),
+            ],
+          ),
+          templates.isNotEmpty
+              ? Expanded(
+                  flex: 1,
+                  child: ListView.builder(
+                    itemCount: templates.length,
+                    itemBuilder: (context, index) {
+                      final template = templates[index];
+                      return Card(
+                        color: Colors.grey[900],
+                        margin: EdgeInsets.all(8),
+                        child: ListTile(
+                          title: Text(template["name"],
+                              style: TextStyle(color: Colors.white)),
+                          subtitle: Text(
+                            (template["exercises"] as List<String>).join(", "),
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit, color: Colors.white),
+                                onPressed: () => _editTemplateDialog(index),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () =>
+                                    _confirmDeleteTemplate(index), // 削除ボタン
+                              ),
+                              Icon(Icons.chevron_right, color: Colors.white),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RecordTrainingScreen(
+                                  exercises: template["exercises"],
+                                  name: template["name"],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       );
                     },
                   ),
-                );
-              },
-            ),
-          ),
-          Divider(color: Colors.yellowAccent),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Text(
-              "Training history",
-              style: TextStyle(
-                  color: Color.fromARGB(255, 209, 209, 0), fontSize: 20),
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: FutureBuilder<Map<String, dynamic>>(
-              future: UseTemplates.fetchHistory(deviceId),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                final history = snapshot.data!;
-                if (history.isEmpty) {
-                  return Center(
-                    child: Text("記録がありません",
-                        style: TextStyle(color: Colors.white70, fontSize: 18)),
-                  );
-                }
-
-                return ListView(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  children: history.entries.map((entry) {
-                    final date = entry.key; // 日付
-                    final data = entry.value as Map<String, dynamic>;
-                    print(data);
-
-                    final templateName = data["name"] ?? "";
-                    final totalVolume = data["totalVolume"] ?? 0.0;
-                    final trainingData = data["data"] ?? {}; // トレーニングデータ（詳細）
-                    print(trainingData);
-                    print(templateName);
-
-                    return GestureDetector(
-                      onTap: () {
-                        // タップ時に詳細画面に遷移
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TrainingDetailScreen(
-                              date: date,
-                              templateName: templateName,
-                              totalVolume: totalVolume,
-                              trainingData: trainingData, // トレーニング詳細を渡す
-                            ),
-                          ),
-                        );
-                      },
-                      child: Card(
-                        color: Colors.grey[900],
-                        margin: EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12), // 角を丸く
-                        ),
-                        elevation: 5, // シャドウを追加して浮き上がった感じ
-                        child: Column(
-                          children: [
-                            // 日付、テンプレート名、トレーニングアイコン
-                            ListTile(
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              title: Text(
-                                date,
-                                style: TextStyle(
-                                    color: Colors.yellowAccent,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16),
-                              ),
-                              subtitle: Text(
-                                "総ボリューム: ${totalVolume.toStringAsFixed(2)} kg·回",
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 12),
-                              ),
-                              trailing: Icon(Icons.fitness_center,
-                                  color: Colors.white, size: 24),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-          ),
+                )
+              : Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("種目ごとのテンプレートを作成しましょう",
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 209, 209, 0),
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                )
         ],
       ),
     );

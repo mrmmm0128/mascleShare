@@ -2,9 +2,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:muscle_share/firebase_options.dart';
 //import 'package:muscle_share/methods/alert.dart';
-import 'package:muscle_share/pages/HomeScreen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:muscle_share/pages/TopPage.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -55,14 +55,6 @@ Future<void> setupFirebaseMessaging() async {
   }
 }
 
-// アプリの初期化時に呼び出す
-// 例: void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   await Firebase.initializeApp();
-//   await setupFirebaseMessaging(); // ★呼び出し
-//   runApp(MyApp());
-// }
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -98,8 +90,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        canvasColor: Colors.grey[900], // ← これが BottomNavigationBar の背景に効く！
       ),
-      home: HomeScreen(),
+      home: TopPage(),
     );
   }
 }

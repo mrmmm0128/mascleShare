@@ -12,9 +12,22 @@ class WorkoutPage extends StatefulWidget {
 class _WorkoutPageState extends State<WorkoutPage> {
   late List<Map<String, String>> myWorkout = [];
   late List<Map<String, String>> originMyWorkout = [];
-  List<Map<String, dynamic>> firstLastData = [];
+  List<Map<String, dynamic>> firstLastData = [{}];
 
-  final List<String> categories = ['All', 'Chest', 'Back', 'Legs', 'Arms'];
+  final List<String> categories = [
+    'All',
+    'Chest',
+    'Back',
+    'Legs',
+    'Arms',
+    "Shoulder",
+    "hip",
+    "Aerobic",
+    "Upper body",
+    "Lower body",
+    "push",
+    "pull"
+  ];
   bool isLoading = true;
   String streek = "";
   String selectedCategory = 'All';
@@ -274,7 +287,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
     );
   }
 
-  void changeCategry(String newCategoly) {
+  Future<void> changeCategry(String newCategoly) async {
     if (newCategoly == "All") {
       myWorkout = originMyWorkout;
     } else {
@@ -294,7 +307,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
 
   Future<void> takeFirstLast() async {
     if (myWorkout.isNotEmpty) {
-      firstLastData.add(myWorkout[0]);
+      firstLastData[0] = myWorkout[myWorkout.length - 1];
     }
   }
 
@@ -343,10 +356,12 @@ class _WorkoutPageState extends State<WorkoutPage> {
                               dropdownColor: Colors.black,
                               borderRadius: BorderRadius.circular(12),
                               onChanged: (String? newValue) {
-                                setState(() {
+                                setState(() async {
                                   selectedCategory = newValue!;
-                                  changeCategry(selectedCategory);
+                                  await changeCategry(selectedCategory);
                                   takeFirstLast();
+                                  streek = myWorkout.length.toString();
+                                  firstLastData;
                                 });
                               },
                               underline: SizedBox(),
@@ -536,6 +551,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                const SizedBox(
+                                  width: 20,
+                                ),
                                 firstLastData[0]["day"] != ""
                                     ? Text(
                                         firstLastData[0]["day"] ??
@@ -543,7 +561,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                         style: TextStyle(
                                           color:
                                               Color.fromARGB(255, 209, 209, 0),
-                                          fontSize: 30,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       )
@@ -552,7 +570,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                         style: TextStyle(
                                           color:
                                               Color.fromARGB(255, 209, 209, 0),
-                                          fontSize: 30,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),

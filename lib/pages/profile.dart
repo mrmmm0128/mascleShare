@@ -137,11 +137,13 @@ class ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.black,
         elevation: 0,
         iconTheme: IconThemeData(color: const Color.fromARGB(255, 209, 209, 0)),
-        title: Text(
-          'Profile',
-          style: TextStyle(
-              color: const Color.fromARGB(255, 209, 209, 0),
-              fontWeight: FontWeight.bold),
+        title: Center(
+          child: Text(
+            'Profile',
+            style: TextStyle(
+                color: const Color.fromARGB(255, 209, 209, 0),
+                fontWeight: FontWeight.bold),
+          ),
         ),
       ),
       backgroundColor: Colors.black,

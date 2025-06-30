@@ -32,5 +32,10 @@ Future<List<Map<String, String>>> fetchHistory() async {
     print("❌ Firestore のデータ取得中に例外が発生しました: $e");
   }
 
+  historyList.sort((a, b) {
+    //return a["day"]!.compareTo(b["day"]!); // 昇順（古い順）
+    return b["day"]!.compareTo(a["day"]!); // 降順（新しい順）
+  });
+
   return historyList;
 }

@@ -8,15 +8,9 @@ import 'package:muscle_share/methods/GetDeviceId.dart';
 import 'package:muscle_share/methods/SavaData.dart';
 import 'package:muscle_share/methods/UpdatephotoInfo.dart';
 import 'package:muscle_share/pages/CommentSheet.dart';
-//import 'package:muscle_share/pages/CommunityPage.dart';
-import 'package:muscle_share/pages/FIndBroScreen.dart';
-import 'package:muscle_share/pages/FriendListScreen.dart';
-import 'package:muscle_share/pages/ToolSelectionScreen.dart';
 import 'package:muscle_share/pages/MyWorkout.dart';
 import 'package:muscle_share/pages/otherProfile.dart';
-import 'package:muscle_share/pages/profile.dart';
 import 'package:image_picker/image_picker.dart';
-//import 'package:muscle_share/pages/push_page.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -64,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> initialize() async {
     await fetchPhotos();
     print(deviceId);
+    controllers = [];
     // final length = photoList.length;
   }
 
@@ -156,7 +151,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // 🌍 Web の場合 → Uint8List に変換
           try {
             Uint8List imageBytes = await pickedFile.readAsBytes();
-            await savePhotoWeb(context, imageBytes, deviceId);
+            // savePhotoWeb が失敗（キャンセル含む）したら何もしない
+            final bool success =
+                await savePhotoWeb(context, imageBytes, deviceId);
+
+            if (!success) return; // ❗キャンセル時は早期 return
             setState(() {
               initialize();
             });
@@ -189,94 +188,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _showActionSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.black,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.camera_alt,
-                    color: Color.fromARGB(255, 209, 209, 0)),
-                title: Text(
-                  'Take a photo',
-                  style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _takePhoto(); // 既存の関数
-                },
-              ),
-              ListTile(
-                leading:
-                    Icon(Icons.person, color: Color.fromARGB(255, 209, 209, 0)),
-                title: Text(
-                  'Find your bro',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 209, 209, 0),
-                  ),
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => FindBroScreen()),
-                  );
-                },
-              ),
-              // ListTile(
-              //   leading:
-              //       Icon(Icons.group, color: Color.fromARGB(255, 209, 209, 0)),
-              //   title: Text(
-              //     'コミュニティ',
-              //     style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
-              //   ),
-              //   onTap: () {
-              //     Navigator.push(
-              //       context,
-              //       MaterialPageRoute(
-              //           builder: (context) => CommunityPage(userId: deviceId)),
-              //     );
-              //   },
-              // ),
-              ListTile(
-                leading:
-                    Icon(Icons.group, color: Color.fromARGB(255, 209, 209, 0)),
-                title: Text(
-                  'Friend list',
-                  style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _viewFriendList(); // 追加関数（下で定義）
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.model_training,
-                    color: Color.fromARGB(255, 209, 209, 0)),
-                title: Text(
-                  'Tool for recording',
-                  style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
-                ),
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => ToolSelectionScreen()));
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   void _showCommentSheet(BuildContext context, String uniqueKey) {
     showModalBottomSheet(
       context: context,
@@ -291,28 +202,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _viewFriendList() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => FriendListScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.account_circle,
-              color: const Color.fromARGB(255, 209, 209, 0), size: 30),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProfileScreen()),
-            );
-          },
+        leading: const SizedBox(
+          width: 12,
         ),
         title: Center(
           child: Text(
@@ -355,6 +252,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        const SizedBox(width: 35),
                         TextButton(
                           style: TextButton.styleFrom(
                             backgroundColor: Colors.transparent, // 背景を透明に
@@ -892,9 +790,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color.fromARGB(255, 209, 209, 0),
         onPressed: () {
-          _showActionSheet(context);
+          _takePhoto();
         },
-        child: Icon(Icons.more_horiz, color: Colors.black),
+        child: Icon(Icons.photo, color: Colors.black),
       ),
     );
   }

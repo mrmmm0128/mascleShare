@@ -45,7 +45,6 @@ class FriendTrainingCard extends StatelessWidget {
       print("❌ Firestore のデータ取得中に例外が発生しました: $e");
       return {"url": "", "name": "Unknown", "startDay": ""}; // エラー時もデフォルト値を返す
     }
-
     return infoList;
   }
 
@@ -71,10 +70,11 @@ class FriendTrainingCard extends StatelessWidget {
         // friendDataがnullの場合やnameが空の場合の処理
         String name = friendData['name'] ?? "Unknown";
         String photoUrl = friendData['url'] ?? "";
-        String templateName = training["name"] ?? "Unknown Template";
+
+        String date = training["date"] ?? "";
         double totalVolume = 0.0;
 
-        Map<String, dynamic> exerciseMap = training["training"] ?? {};
+        Map<String, dynamic> exerciseMap = training["data"] ?? {};
         exerciseMap.forEach((exerciseName, sets) {
           for (var set in sets) {
             final weight = (set["weight"] ?? 0).toDouble();
@@ -84,13 +84,12 @@ class FriendTrainingCard extends StatelessWidget {
         });
 
         return Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(4),
           child: InkWell(
             onTap: () {
               // training Map に必要な情報を追加して画面遷移
               Map<String, dynamic> enrichedTraining =
                   Map<String, dynamic>.from(training)
-                    ..["templateName"] = templateName
                     ..["totalVolume"] =
                         totalVolume.toStringAsFixed(2); // 画面側で文字列扱いに
 
@@ -108,16 +107,16 @@ class FriendTrainingCard extends StatelessWidget {
             splashColor: Colors.yellowAccent.withOpacity(0.3),
             child: Card(
               color: Colors.grey[900],
-              margin: EdgeInsets.symmetric(vertical: 8),
+              margin: EdgeInsets.symmetric(vertical: 4), // ← margin 減らす
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              elevation: 5,
+              elevation: 3, // ← elevation も少し低めにして密度感アップ
               child: Column(
                 children: [
                   ListTile(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 4), // ← padding 小さめ
                     leading: CircleAvatar(
                       backgroundImage:
                           photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
@@ -125,30 +124,30 @@ class FriendTrainingCard extends StatelessWidget {
                           ? Icon(Icons.person, color: Colors.black)
                           : null,
                       backgroundColor: Colors.yellowAccent,
-                      radius: 24,
+                      radius: 20, // ← 少し小さめ
                     ),
                     title: Text(
                       name,
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 15, // ← 少し小さめにして圧縮感
                       ),
                     ),
                     subtitle: Text(
-                      "トレーニング種目: $templateName",
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                      date,
+                      style: TextStyle(color: Colors.white70, fontSize: 11),
                     ),
                     trailing: Icon(Icons.fitness_center,
-                        color: Colors.white, size: 24),
+                        color: Colors.white, size: 22),
                   ),
-                  Divider(color: Colors.yellowAccent),
+                  Divider(color: Colors.yellowAccent, height: 1),
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 2), // ← padding さらに小さく
                     child: Text(
                       "総ボリューム: ${totalVolume.toStringAsFixed(2)} kg·回",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
+                      style: TextStyle(color: Colors.white, fontSize: 13),
                     ),
                   ),
                 ],

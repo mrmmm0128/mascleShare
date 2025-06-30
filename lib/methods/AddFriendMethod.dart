@@ -1,87 +1,73 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<void> addFriend(String friendDeviceId, String myDeviceId) async {
-  // 友達リスト、リクエスト送信リスト、リクエスト受信リスト
   List<String> myFriendLists = [];
   List<String> yourFriendLists = [];
   List<String> sentFriendRequests = [];
   List<String> receivedFriendRequests = [];
 
   try {
-    // 友達のプロフィールを取得
-    DocumentSnapshot friendProfileSnapshot = await FirebaseFirestore.instance
+    // 友達のプロフィール取得
+    final friendProfileSnapshot = await FirebaseFirestore.instance
         .collection(friendDeviceId)
         .doc("profile")
         .get();
 
-    // 自分のプロフィールを取得
-    DocumentSnapshot myProfileSnapshot = await FirebaseFirestore.instance
+    if (friendProfileSnapshot.exists) {
+      final data = friendProfileSnapshot.data() as Map<String, dynamic>;
+
+      if (data["friendDeviceId"] != null && data["friendDeviceId"] is List) {
+        yourFriendLists = List<String>.from(data["friendDeviceId"]);
+      }
+
+      if (data["request"] != null && data["request"] is List) {
+        sentFriendRequests = List<String>.from(data["request"]);
+      }
+    }
+
+    // 自分のプロフィール取得
+    final myProfileSnapshot = await FirebaseFirestore.instance
         .collection(myDeviceId)
         .doc("profile")
         .get();
 
-    // 友達のプロフィールが存在するかチェック
-    if (friendProfileSnapshot.exists) {
-      var friendProfileData =
-          friendProfileSnapshot.data() as Map<String, dynamic>;
-      // "friendDeviceId" フィールドが存在する場合はリストを取得
-      if (friendProfileData.containsKey('friendDeviceId')) {
-        yourFriendLists =
-            List<String>.from(friendProfileData['friendDeviceId']);
-      }
-      if (friendProfileData.containsKey('request')) {
-        sentFriendRequests =
-            List<String>.from(friendProfileData['friendDeviceId']);
-      }
-    } else {
-      print("友達のプロフィールが存在しません");
-    }
-
-    // 自分のプロフィールが存在するかチェック
     if (myProfileSnapshot.exists) {
-      var myProfileData = myProfileSnapshot.data() as Map<String, dynamic>;
-      // "request" フィールド（送信した友達リクエスト）が存在する場合はリストを取得
-      if (myProfileData.containsKey('requested')) {
-        receivedFriendRequests = List<String>.from(myProfileData['requested']);
+      final data = myProfileSnapshot.data() as Map<String, dynamic>;
+
+      if (data["friendDeviceId"] != null && data["friendDeviceId"] is List) {
+        myFriendLists = List<String>.from(data["friendDeviceId"]);
       }
-      // "friendDeviceId" フィールド（受信した友達リクエスト）が存在する場合はリストを取得
-      if (myProfileData.containsKey('friendDeviceId')) {
-        myFriendLists = List<String>.from(myProfileData['friendDeviceId']);
+
+      if (data["requested"] != null && data["requested"] is List) {
+        receivedFriendRequests = List<String>.from(data["requested"]);
       }
-    } else {
-      print("自分のプロフィールが存在しません");
     }
 
-    // 友達リクエストが送信されていない場合、自分のデバイスIDをリストに追加
+    // リクエストのクリーンアップ処理
     if (sentFriendRequests.contains(myDeviceId)) {
       sentFriendRequests.remove(myDeviceId);
-      // Firebaseに送信した友達リクエストを更新
       await FirebaseFirestore.instance
           .collection(friendDeviceId)
           .doc("profile")
           .set({"request": sentFriendRequests}, SetOptions(merge: true));
     }
 
-    // 友達リクエストが受信されていない場合、友達のデバイスIDをリストに追加
-
     if (receivedFriendRequests.contains(friendDeviceId)) {
-      print(receivedFriendRequests);
       receivedFriendRequests.remove(friendDeviceId);
-      // Firebaseに受信した友達リクエストを更新
       await FirebaseFirestore.instance
           .collection(myDeviceId)
           .doc("profile")
           .set({"requested": receivedFriendRequests}, SetOptions(merge: true));
     }
 
-    // 友達リストに自分のデバイスIDを追加
-    if (!myFriendLists.contains(myDeviceId)) {
+    // 友達リストへの追加
+    if (!myFriendLists.contains(friendDeviceId)) {
       myFriendLists.add(friendDeviceId);
       await FirebaseFirestore.instance
           .collection(myDeviceId)
           .doc("profile")
           .set({"friendDeviceId": myFriendLists}, SetOptions(merge: true));
-      print("自分の友達リストに追加しました: $friendDeviceId");
+      print("✅ 自分の友達リストに追加しました: $friendDeviceId");
     }
 
     if (!yourFriendLists.contains(myDeviceId)) {
@@ -90,10 +76,10 @@ Future<void> addFriend(String friendDeviceId, String myDeviceId) async {
           .collection(friendDeviceId)
           .doc("profile")
           .set({"friendDeviceId": yourFriendLists}, SetOptions(merge: true));
-      print("相手側の友達リストに追加しました: $myDeviceId");
+      print("✅ 相手側の友達リストに追加しました: $myDeviceId");
     }
   } catch (e) {
-    print("友達追加中にエラーが発生しました: $e");
+    print("❌ 友達追加中にエラーが発生しました: $e");
   }
 }
 

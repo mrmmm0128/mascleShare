@@ -50,6 +50,13 @@ class TrainingDetailScreen extends StatelessWidget {
                   final exerciseName = exercises.keys.elementAt(index);
                   final sets = exercises[exerciseName] as List<dynamic>;
 
+// ▼ 最大推定1RMの計算（Epley式）
+                  final maxEstimatedRm = sets.map((set) {
+                    final weight = set['weight'] ?? 0;
+                    final reps = set['reps'] ?? 0;
+                    return weight * (1 + 0.0333 * reps);
+                  }).fold<double>(0.0, (prev, rm) => rm > prev ? rm : prev);
+
                   return Card(
                     key: ValueKey(exerciseName),
                     color: Colors.grey[900],
@@ -76,6 +83,12 @@ class TrainingDetailScreen extends StatelessWidget {
                               Icon(Icons.fitness_center, color: Colors.white54),
                             ],
                           ),
+                          SizedBox(height: 6),
+                          Text(
+                            "推定MaxRM: ${maxEstimatedRm.toStringAsFixed(1)} kg",
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 14),
+                          ),
                           SizedBox(height: 12),
                           ...sets.asMap().entries.map((entry) {
                             final i = entry.key;
@@ -97,9 +110,7 @@ class TrainingDetailScreen extends StatelessWidget {
                                     Text("${i + 1}セット目",
                                         style: TextStyle(
                                             color: Colors.white, fontSize: 14)),
-                                    SizedBox(
-                                      width: 10,
-                                    ),
+                                    SizedBox(width: 10),
                                     Text(
                                       "${weight}kg × ${reps}回",
                                       style: TextStyle(
