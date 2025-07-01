@@ -11,7 +11,7 @@ class HistoryRecording extends StatefulWidget {
 }
 
 class _HistoryRecording extends State<HistoryRecording> {
-  late String deviceId;
+  String deviceId = "";
 
   @override
   void initState() {
