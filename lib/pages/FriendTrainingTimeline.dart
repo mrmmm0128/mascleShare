@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/pages/FriendTrainingCard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:muscle_share/pages/Header.dart';
 
 class ToolSelectionScreen extends StatefulWidget {
   const ToolSelectionScreen({super.key});
@@ -28,7 +29,7 @@ class _ToolSelectionScreenState extends State<ToolSelectionScreen> {
       _isLoading = true;
     });
 
-    myDeviceId = await getDeviceUUID(); // 自分のデバイスIDを取得
+    myDeviceId = await getDeviceIDweb(); // 自分のデバイスIDを取得
 
     try {
       // 友達のトレーニングデータを取得
@@ -75,7 +76,10 @@ class _ToolSelectionScreenState extends State<ToolSelectionScreen> {
               String name = data["name"] ?? "";
 
               data.forEach((key, value) {
-                if (key != "name" && value is List) {
+                if (key != "name" &&
+                    value is List &&
+                    key != "like" &&
+                    key != "comment") {
                   for (var set in value) {
                     totalVolume += (set["weight"] ?? 0) * (set["reps"] ?? 0);
                   }
@@ -96,7 +100,6 @@ class _ToolSelectionScreenState extends State<ToolSelectionScreen> {
 
       // 🔽 日付の降順でソート
       allFriendsHistories.sort((a, b) => b["date"].compareTo(a["date"]));
-      print(allFriendsHistories);
 
       // 保存して表示用に
       setState(() {
@@ -111,17 +114,8 @@ class _ToolSelectionScreenState extends State<ToolSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black, // 背景を黒に
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
-        backgroundColor: Colors.black, // AppBarの背景も黒
-        elevation: 0,
-
-        title: const Text(
-          '友人のトレーニング',
-          style: TextStyle(
-              color: Color.fromARGB(255, 209, 209, 0),
-              fontWeight: FontWeight.bold),
-        ),
+      appBar: Header(
+        title: 'タイムライン',
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,

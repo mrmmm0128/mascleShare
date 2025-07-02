@@ -4,6 +4,7 @@ import 'package:muscle_share/methods/AddFriendMethod.dart';
 import 'package:muscle_share/methods/GetDeviceId.dart';
 import 'package:muscle_share/pages/ConfirmOtherProfile.dart';
 import 'package:muscle_share/pages/FIndBroScreen.dart';
+import 'package:muscle_share/pages/Header.dart';
 import 'package:muscle_share/pages/otherProfile.dart';
 
 class FriendListScreen extends StatefulWidget {
@@ -28,7 +29,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
 
   Future<void> fetchFriendList() async {
     try {
-      deviceId = await getDeviceUUID();
+      deviceId = await getDeviceIDweb();
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
           .collection(deviceId)
           .doc("profile")
@@ -72,7 +73,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
 
   Future<void> fetchRequestList() async {
     try {
-      String deviceId = await getDeviceUUID();
+      String deviceId = await getDeviceIDweb();
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
           .collection(deviceId)
           .doc("profile")
@@ -117,18 +118,8 @@ class _FriendListScreenState extends State<FriendListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
-        title: Center(
-          child: Text(
-            '友達リスト',
-            style: TextStyle(
-                color: Color.fromARGB(255, 209, 209, 0),
-                fontWeight: FontWeight.bold),
-          ),
-        ),
-        elevation: 0,
+      appBar: Header(
+        title: 'broリスト',
       ),
       backgroundColor: Colors.black,
       body: _isLoading

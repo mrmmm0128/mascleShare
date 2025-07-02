@@ -8,6 +8,7 @@ import 'package:muscle_share/methods/GetDeviceId.dart';
 import 'package:muscle_share/methods/SaveDataForProfile.dart';
 import 'package:muscle_share/pages/BestRecordsInput.dart';
 import 'package:muscle_share/data/PreAndCity.dart';
+import 'package:muscle_share/pages/Header.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -43,7 +44,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> initializeProfile() async {
-    deviceId = await getDeviceUUID();
+    deviceId = await getDeviceIDweb();
     infoList = await fetchInfo();
 
     setState(() {
@@ -61,7 +62,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    deviceId = await getDeviceUUID(); // デバイス ID を取得
+    deviceId = await getDeviceIDweb(); // デバイス ID を取得
 
     try {
       pickedFile = await picker.pickImage(source: ImageSource.camera);
@@ -133,18 +134,8 @@ class ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        iconTheme: IconThemeData(color: const Color.fromARGB(255, 209, 209, 0)),
-        title: Center(
-          child: Text(
-            'Profile',
-            style: TextStyle(
-                color: const Color.fromARGB(255, 209, 209, 0),
-                fontWeight: FontWeight.bold),
-          ),
-        ),
+      appBar: Header(
+        title: 'プロフィール',
       ),
       backgroundColor: Colors.black,
       body: _isLoading

@@ -147,7 +147,7 @@ Future<String> uploadProfileImageToStorageWeb(
 
 Future<void> saveBestRecords(
     Map<String, List<Map<String, dynamic>>> bestRecords) async {
-  String deviceId = await getDeviceUUID();
+  String deviceId = await getDeviceIDweb();
   final docRef = FirebaseFirestore.instance.collection(deviceId).doc("profile");
 
   final docSnapshot = await docRef.get();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/UseTemplates.dart';
 import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/pages/Header.dart';
 import 'package:muscle_share/pages/HistoryRecording.dart';
 import 'package:muscle_share/pages/RecordTrainingScreen.dart';
 import 'package:muscle_share/pages/FriendTrainingTimeline.dart';
@@ -60,7 +61,7 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
   }
 
   Future<void> initialize() async {
-    deviceId = await getDeviceUUID();
+    deviceId = await getDeviceIDweb();
     loadTemplates();
   }
 
@@ -571,14 +572,8 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Center(
-            child: Text("トレーニング記録",
-                style: TextStyle(
-                    color: Color.fromARGB(255, 209, 209, 0),
-                    fontWeight: FontWeight.bold))),
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
+      appBar: Header(
+        title: 'トレーニング記録',
       ),
       backgroundColor: Colors.black,
       body: Column(
@@ -610,28 +605,28 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ToolSelectionScreen()),
-                          );
-                        },
-                        icon: Icon(Icons.people),
-                        label: Text("友人のトレーニング"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[800],
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16), // ✅ 丸み
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                        ),
-                      ),
-                    ),
+                    // SizedBox(width: 12),
+                    // Expanded(
+                    //   child: ElevatedButton.icon(
+                    //     onPressed: () {
+                    //       Navigator.push(
+                    //         context,
+                    //         MaterialPageRoute(
+                    //             builder: (context) => ToolSelectionScreen()),
+                    //       );
+                    //     },
+                    //     icon: Icon(Icons.people),
+                    //     label: Text("テンプレート例"),
+                    //     style: ElevatedButton.styleFrom(
+                    //       backgroundColor: Colors.grey[800],
+                    //       foregroundColor: Colors.white,
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(16), // ✅ 丸み
+                    //       ),
+                    //       padding: EdgeInsets.symmetric(vertical: 14),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
                 SizedBox(height: 12),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:muscle_share/pages/Header.dart';
 
 class FriendTrainingDetailScreen extends StatelessWidget {
   final Map<String, dynamic> training;
@@ -19,14 +20,8 @@ class FriendTrainingDetailScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text(
-          "トレーニング詳細",
-          style: TextStyle(color: Colors.yellowAccent),
-        ),
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.yellowAccent),
+      appBar: Header(
+        title: 'トレーニング詳細',
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -95,7 +90,13 @@ class FriendTrainingDetailScreen extends StatelessWidget {
                 SizedBox(height: 12),
 
                 // 種目ごとの詳細
-                ...exercises.entries.map((entry) {
+                // 種目ごとの詳細（"comment"や"like"などの無関係データを除外）
+                ...exercises.entries
+                    .where((entry) =>
+                        entry.value is List &&
+                        (entry.value as List).isNotEmpty &&
+                        (entry.value as List).first is Map)
+                    .map((entry) {
                   final exerciseName = entry.key;
                   final sets = List<Map<String, dynamic>>.from(entry.value);
 

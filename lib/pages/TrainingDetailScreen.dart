@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:muscle_share/pages/Header.dart';
 
 class TrainingDetailScreen extends StatelessWidget {
   final String date;
@@ -21,14 +22,8 @@ class TrainingDetailScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text(
-          "Training Details",
-          style: TextStyle(color: Colors.yellowAccent),
-        ),
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.yellowAccent),
+      appBar: Header(
+        title: 'トレーニング詳細',
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -48,83 +43,89 @@ class TrainingDetailScreen extends StatelessWidget {
                 itemCount: exercises.keys.length,
                 itemBuilder: (context, index) {
                   final exerciseName = exercises.keys.elementAt(index);
-                  final sets = exercises[exerciseName] as List<dynamic>;
+                  if (exerciseName != "like" && exerciseName != "comment") {
+                    final sets = exercises[exerciseName] as List<dynamic>;
 
 // ▼ 最大推定1RMの計算（Epley式）
-                  final maxEstimatedRm = sets.map((set) {
-                    final weight = set['weight'] ?? 0;
-                    final reps = set['reps'] ?? 0;
-                    return weight * (1 + 0.0333 * reps);
-                  }).fold<double>(0.0, (prev, rm) => rm > prev ? rm : prev);
+                    final maxEstimatedRm = sets.map((set) {
+                      final weight = set['weight'] ?? 0;
+                      final reps = set['reps'] ?? 0;
+                      return weight * (1 + 0.0333 * reps);
+                    }).fold<double>(0.0, (prev, rm) => rm > prev ? rm : prev);
 
-                  return Card(
-                    key: ValueKey(exerciseName),
-                    color: Colors.grey[900],
-                    margin: const EdgeInsets.only(bottom: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  exerciseName,
-                                  style: TextStyle(
-                                    color: Colors.yellowAccent,
-                                    fontSize: 16,
+                    return Card(
+                      key: ValueKey(exerciseName),
+                      color: Colors.grey[900],
+                      margin: const EdgeInsets.only(bottom: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    exerciseName,
+                                    style: TextStyle(
+                                      color: Colors.yellowAccent,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Icon(Icons.fitness_center, color: Colors.white54),
-                            ],
-                          ),
-                          SizedBox(height: 6),
-                          Text(
-                            "推定MaxRM: ${maxEstimatedRm.toStringAsFixed(1)} kg",
-                            style:
-                                TextStyle(color: Colors.white70, fontSize: 14),
-                          ),
-                          SizedBox(height: 12),
-                          ...sets.asMap().entries.map((entry) {
-                            final i = entry.key;
-                            final set = entry.value;
-                            final weight = set['weight'] ?? 0;
-                            final reps = set['reps'] ?? 0;
+                                Icon(Icons.fitness_center,
+                                    color: Colors.white54),
+                              ],
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "推定MaxRM: ${maxEstimatedRm.toStringAsFixed(1)} kg",
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 14),
+                            ),
+                            SizedBox(height: 12),
+                            ...sets.asMap().entries.map((entry) {
+                              final i = entry.key;
+                              final set = entry.value;
+                              final weight = set['weight'] ?? 0;
+                              final reps = set['reps'] ?? 0;
 
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[800],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text("${i + 1}セット目",
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: Container(
+                                  padding: EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[800],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text("${i + 1}セット目",
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14)),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        "${weight}kg × ${reps}回",
                                         style: TextStyle(
-                                            color: Colors.white, fontSize: 14)),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      "${weight}kg × ${reps}回",
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 15),
-                                    ),
-                                  ],
+                                            color: Colors.white, fontSize: 15),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                        ],
+                              );
+                            }).toList(),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 },
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/FetchInfoProfile.dart';
 import 'package:muscle_share/methods/GetDeviceId.dart';
 import 'package:muscle_share/methods/SaveDataForProfile.dart';
+import 'package:muscle_share/pages/Header.dart';
 
 class BestRecordsInputScreen extends StatefulWidget {
   @override
@@ -20,7 +21,7 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
   }
 
   Future<void> initialize() async {
-    String deviceId = await getDeviceUUID();
+    String deviceId = await getDeviceIDweb();
     final data = await fetchBestRecords(deviceId);
     // 各部位がなければ空リストで初期化
 
@@ -60,14 +61,8 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 209, 209, 0),
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
-        title: Text(
-          'Best Records',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
+      appBar: Header(
+        title: '最高記録を入力しましょう',
       ),
       backgroundColor: Colors.black,
       body: SingleChildScrollView(

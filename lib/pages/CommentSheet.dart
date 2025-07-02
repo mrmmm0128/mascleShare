@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
+//import 'package:intl/intl.dart';
 import 'package:muscle_share/methods/AddCommentLike.dart';
 
 class CommentSheet extends StatefulWidget {
-  final String uniqueKey;
+  final String deviceId;
+  final String date;
 
-  const CommentSheet({super.key, required this.uniqueKey});
+  const CommentSheet({super.key, required this.deviceId, required this.date});
 
   @override
   State<CommentSheet> createState() => _CommentSheetState();
@@ -23,9 +24,8 @@ class _CommentSheetState extends State<CommentSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final docRef =
-        FirebaseFirestore.instance.collection("date$dateKey").doc("memory");
+        FirebaseFirestore.instance.collection(widget.deviceId).doc("history");
 
     return Padding(
       padding: EdgeInsets.only(
@@ -48,8 +48,7 @@ class _CommentSheetState extends State<CommentSheet> {
               if (!snapshot.hasData) return const CircularProgressIndicator();
 
               final data = snapshot.data!.data() as Map<String, dynamic>;
-              final comments =
-                  (data[widget.uniqueKey]?['comment'] ?? []) as List;
+              final comments = (data[widget.date]?['comment'] ?? []) as List;
 
               return SizedBox(
                 height: 200,
@@ -98,7 +97,8 @@ class _CommentSheetState extends State<CommentSheet> {
             onPressed: () async {
               final text = _controller.text.trim();
               if (text.isNotEmpty) {
-                await AddCommentLike.addComment(widget.uniqueKey, text);
+                await AddCommentLike.addComment(
+                    widget.deviceId, widget.date, text);
                 _controller.clear();
               }
             },

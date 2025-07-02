@@ -1,49 +1,54 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:muscle_share/methods/FetchInfoProfile.dart';
 
 class AddCommentLike {
-  static void editLike(
-      String deviceId, List<String> likeDeviceIds, String unique) async {
-    String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final docRef = FirebaseFirestore.instance
-        .collection("date$dateKey") // or your collection like: "date2025-06-08"
-        .doc('memory');
+  static void editLike(String mydeviceId, List<String> likeDeviceIds,
+      String date, String friendDeviceId) async {
+    final docRef =
+        FirebaseFirestore.instance.collection(friendDeviceId).doc('history');
 
-    if (likeDeviceIds.contains(deviceId)) {
+    if (likeDeviceIds.contains(mydeviceId)) {
       // すでに含まれていれば「いいね解除」
       await docRef.update({
-        '$unique.like': FieldValue.arrayRemove([deviceId])
+        '$date.like': FieldValue.arrayRemove([mydeviceId])
       });
     } else {
       // 含まれていなければ「いいね追加」
       await docRef.update({
-        '$unique.like': FieldValue.arrayUnion([deviceId])
+        '$date.like': FieldValue.arrayUnion([mydeviceId])
       });
     }
   }
 
-  static Future<void> addComment(String unique, String comment) async {
-    Map<String, dynamic> infoList = await fetchInfo();
-    String url = infoList["url"];
-    String name = infoList["name"];
+  static Future<void> addComment(
+    String deviceId,
+    String date,
+    String comment,
+  ) async {
+    try {
+      Map<String, dynamic> infoList = await fetchInfo();
+      String url = infoList["url"];
+      String name = infoList["name"];
 
-    String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final docRef = FirebaseFirestore.instance
-        .collection("date$dateKey") // or your collection like: "date2025-06-08"
-        .doc('memory');
+      final docRef =
+          FirebaseFirestore.instance.collection(deviceId).doc('history');
 
-    await docRef.update({
-      '$unique.comment': FieldValue.arrayUnion([
-        {"name": name, "url": url, "comment": comment}
-      ])
-    });
+      await docRef.update({
+        '$date.comment': FieldValue.arrayUnion([
+          {"name": name, "url": url, "comment": comment}
+        ])
+      });
+    } catch (e, stackTrace) {
+      print("❌ コメント追加時にエラーが発生しました: $e");
+      print(stackTrace);
+      rethrow; // 呼び出し元でもハンドリングできるように再スロー
+    }
   }
 
-  static Future<List<Map<String, String>>> fetchComment(String unique) async {
-    String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  static Future<List<Map<String, String>>> fetchComment(
+      String deviceId, String date) async {
     final docRef =
-        FirebaseFirestore.instance.collection("date$dateKey").doc('memory');
+        FirebaseFirestore.instance.collection(deviceId).doc('history');
 
     List<Map<String, String>> commentList = [];
 
@@ -51,8 +56,12 @@ class AddCommentLike {
       final docSnapshot = await docRef.get();
       final data = docSnapshot.data();
 
-      if (data != null && data[unique]?['comment'] is List) {
-        List<dynamic> rawComments = data[unique]['comment'];
+      final entry = data?[date];
+
+      if (entry is Map<String, dynamic> &&
+          entry['comment'] is List &&
+          entry["comment"] != null) {
+        List<dynamic> rawComments = entry['comment'];
 
         for (var comment in rawComments) {
           if (comment is Map<String, dynamic>) {
@@ -63,11 +72,34 @@ class AddCommentLike {
             });
           }
         }
-      }
+      } else {}
     } catch (e) {
       print("❌ コメント取得失敗: $e");
     }
 
     return commentList;
+  }
+
+  static Future<List<String>> fetchLike(String deviceId, String date) async {
+    final docRef =
+        FirebaseFirestore.instance.collection(deviceId).doc('history');
+
+    List<String> rawLikes = [];
+
+    try {
+      final docSnapshot = await docRef.get();
+      final data = docSnapshot.data();
+
+      final entry = data?[date];
+
+      if (entry is Map<String, dynamic> && entry['like'] is List) {
+        // 明示的に String 型として cast
+        rawLikes = List<String>.from(entry['like']);
+      }
+    } catch (e) {
+      print("❌ いいね取得失敗: $e");
+    }
+
+    return rawLikes;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:muscle_share/data/PreAndCity.dart';
+import 'package:muscle_share/pages/Header.dart';
 import 'package:muscle_share/pages/MatchingResultScreen.dart';
 
 class FindBroScreen extends StatefulWidget {
@@ -43,16 +44,8 @@ class _FindBroScreenState extends State<FindBroScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
-        title: Text(
-          'Find your bro',
-          style: TextStyle(
-              color: Color.fromARGB(255, 209, 209, 0),
-              fontWeight: FontWeight.bold),
-        ),
-        elevation: 0,
+      appBar: Header(
+        title: '最強のbroを見つけましょう',
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

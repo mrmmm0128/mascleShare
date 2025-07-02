@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/pages/Header.dart';
 import 'package:muscle_share/pages/otherProfile.dart';
 
 class MatchingResultScreen extends StatefulWidget {
@@ -44,7 +45,7 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
   }
 
   Future<void> _fetchFilteredProfiles() async {
-    myDeviceId = await getDeviceUUID();
+    myDeviceId = await getDeviceIDweb();
 
     try {
       final snapshot =
@@ -153,13 +154,8 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text("Result research",
-            style: TextStyle(
-                color: Color.fromARGB(255, 209, 209, 0),
-                fontWeight: FontWeight.bold)),
-        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
+      appBar: Header(
+        title: 'bro検索結果',
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: Colors.yellowAccent))

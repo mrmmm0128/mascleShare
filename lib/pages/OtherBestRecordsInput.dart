@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/FetchInfoProfile.dart';
+import 'package:muscle_share/pages/Header.dart';
 
 class OtherBestRecordsInput extends StatefulWidget {
   final String deviceId; // ← 受け取りたい変数
@@ -46,14 +47,8 @@ class _OtherRecordsState extends State<OtherBestRecordsInput> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 209, 209, 0),
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
-        title: Text(
-          'Best Records',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
+      appBar: Header(
+        title: '最高記録',
       ),
       backgroundColor: Colors.black,
       body: ListView.builder(

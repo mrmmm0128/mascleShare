@@ -89,7 +89,10 @@ class UseTemplates {
 
         // 各種目に対してボリュームを計算
         data.forEach((key, value) {
-          if (key != "name" && value is List<dynamic>) {
+          if (key != "name" &&
+              value is List<dynamic> &&
+              key != "like" &&
+              key != "comment") {
             value.forEach((set) {
               final weight = set['weight'] ?? 0;
               final reps = set['reps'] ?? 0;

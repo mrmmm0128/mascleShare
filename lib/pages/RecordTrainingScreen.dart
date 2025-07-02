@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/UseTemplates.dart';
 import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/pages/Header.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RecordTrainingScreen extends StatefulWidget {
@@ -44,7 +45,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
   }
 
   Future<void> initialize() async {
-    deviceId = await getDeviceUUID();
+    deviceId = await getDeviceIDweb();
   }
 
   void loadDraft() async {
@@ -77,15 +78,8 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.name,
-          style: TextStyle(
-              color: Color.fromARGB(255, 209, 209, 0),
-              fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
+      appBar: Header(
+        title: '記録する',
       ),
       backgroundColor: Colors.black,
       body: Column(

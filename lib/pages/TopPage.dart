@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:muscle_share/pages/FriendListScreen.dart';
-import 'package:muscle_share/pages/HomeScreen.dart';
 import 'package:muscle_share/pages/QuickInputScreen.dart';
 import 'package:muscle_share/pages/FriendTrainingTimeline.dart';
+import 'package:muscle_share/pages/TrainingCarenderScreen.dart';
 import 'package:muscle_share/pages/profile.dart';
 
 class TopPage extends StatefulWidget {
@@ -16,8 +16,9 @@ class _TopPageState extends State<TopPage> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
+    ToolSelectionScreen(),
     QuickInputScreen(),
-    HomeScreen(),
+    TrainingCalendarScreen(),
     FriendListScreen(),
     ProfileScreen()
   ];
@@ -39,16 +40,20 @@ class _TopPageState extends State<TopPage> {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book),
-            label: 'トレ記録',
+            icon: Icon(Icons.event_note),
+            label: 'タイムライン',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.photo),
-            label: '写真記録',
+            icon: Icon(Icons.menu_book),
+            label: '記録する',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.timeline),
+            label: 'レポート',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.group),
-            label: '友達',
+            label: '探す',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
