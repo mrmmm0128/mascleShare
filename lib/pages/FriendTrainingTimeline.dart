@@ -59,6 +59,8 @@ class _ToolSelectionScreenState extends State<ToolSelectionScreen> {
 
       List<Map<String, dynamic>> allFriendsHistories = [];
 
+      friendDeviceIds.add(myDeviceId);
+
       for (String friendId in friendDeviceIds) {
         DocumentSnapshot historyDoc = await FirebaseFirestore.instance
             .collection(friendId)
