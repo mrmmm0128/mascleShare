@@ -4,7 +4,6 @@ import 'package:muscle_share/methods/GetDeviceId.dart';
 import 'package:muscle_share/pages/Header.dart';
 import 'package:muscle_share/pages/HistoryRecording.dart';
 import 'package:muscle_share/pages/RecordTrainingScreen.dart';
-import 'package:muscle_share/pages/FriendTrainingTimeline.dart';
 
 class QuickInputScreen extends StatefulWidget {
   const QuickInputScreen({super.key});

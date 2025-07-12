@@ -126,6 +126,7 @@ class TrainingDetailScreen extends StatelessWidget {
                       ),
                     );
                   }
+                  return null;
                 },
               ),
             ),

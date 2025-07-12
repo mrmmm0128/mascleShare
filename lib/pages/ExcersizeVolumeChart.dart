@@ -43,10 +43,7 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
     data?.forEach((key, value) {
       if (value is Map<String, dynamic>) {
         value.forEach((exercise, sets) {
-          if (exercise is String &&
-              sets is List &&
-              exercise != "like" &&
-              exercise != "comment") {
+          if (sets is List && exercise != "like" && exercise != "comment") {
             exerciseSet.add(exercise);
           }
         });

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:muscle_share/methods/DeleteAccount.dart';
 import 'package:muscle_share/methods/PhotoCropper.dart';
 import 'package:muscle_share/methods/PhotoSelect.dart';
 import 'package:muscle_share/methods/FetchInfoProfile.dart';
@@ -8,7 +9,6 @@ import 'package:muscle_share/methods/GetDeviceId.dart';
 import 'package:muscle_share/methods/SaveDataForProfile.dart';
 import 'package:muscle_share/pages/BestRecordsInput.dart';
 import 'package:muscle_share/data/PreAndCity.dart';
-import 'package:muscle_share/pages/Header.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -134,8 +134,123 @@ class ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Header(
-        title: 'プロフィール',
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // ← 左寄せ
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // ✅ プロフィール画像（左端）
+
+                Text(
+                  "プロフィール",
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 209, 209, 0),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // ローディングダイアログを表示
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false, // ダイアログ外をタップしても閉じない
+                      builder: (BuildContext context) {
+                        return Center(
+                            child: CircularProgressIndicator(
+                                color: Colors.yellowAccent));
+                      },
+                    );
+
+                    // 初期化
+                    bool _canSave = true;
+
+                    // 身長と体重が選択されていない場合
+                    if (_selectedHeight == null || _selectedWeight == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('身長と体重を入力してください')),
+                      );
+                      _canSave = false;
+                    }
+
+                    // IDが8文字未満の場合
+                    if (_idController.text.length < 8) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('IDを英数字８文字以上で入力してください')),
+                      );
+                      _canSave = false;
+                    }
+
+                    // 名前が未入力の場合
+                    if (_nameController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('名前を入力してください')),
+                      );
+                      _canSave = false;
+                    }
+
+                    // 全ての条件を満たしている場合
+                    if (_canSave) {
+                      // 処理を実行（例: saveInfoWeb）
+                      int con = await saveInfoWeb(
+                          _idController.text,
+                          _nameController.text,
+                          _dateController.text,
+                          deviceId,
+                          imageBytes,
+                          _selectedHeight!,
+                          _selectedWeight!,
+                          originId);
+
+                      originId = _idController.text;
+
+                      // 処理が終わったらダイアログを閉じる
+                      Navigator.pop(context); // ダイアログを閉じる
+
+                      if (con == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('このIDは既に使用されています')),
+                        );
+                      } else if (con == 2) {
+                        // 成功メッセージを表示
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('プロフィール情報が保存されました！')),
+                        );
+                      }
+                    } else {
+                      // 処理が無効な場合でもダイアログを閉じる
+                      Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Color.fromARGB(255, 209, 209, 0),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Color.fromARGB(255, 209, 209, 0)),
+                    ),
+                  ),
+                  child: Text("変更を保存する"),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Container(
+              width: double.infinity, // 横幅いっぱい
+              height: 1,
+              color: Colors.grey, // 境界線の色
+            ),
+          ],
+        ),
       ),
       backgroundColor: Colors.black,
       body: _isLoading
@@ -492,75 +607,53 @@ class ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
-                      // ローディングダイアログを表示
-                      showDialog(
-                        context: context,
-                        barrierDismissible: false, // ダイアログ外をタップしても閉じない
-                        builder: (BuildContext context) {
-                          return Center(
-                              child: CircularProgressIndicator(
-                                  color: Colors.yellowAccent));
-                        },
-                      );
+                      bool confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                    backgroundColor: Colors.black,
+                                    title: Text("本当に削除しますか？",
+                                        style: TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 209, 209, 0))),
+                                    content: Text(
+                                        "プロフィール情報、これまで記録したトレーニング記録、broリストの内容が消えてしまいますがよろしいですか？",
+                                        style: TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 209, 209, 0))),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(false),
+                                        child: Text(
+                                          "キャンセル",
+                                          style: TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 209, 209, 0)),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(true),
+                                        child: Text(
+                                          "OK",
+                                          style: TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 209, 209, 0)),
+                                        ),
+                                      ),
+                                    ],
+                                  )) ??
+                          false;
 
-                      // 初期化
-                      bool _canSave = true;
+                      if (confirmed) {
+                        // broリストから自分を削除（相手側から）
+                        await removeFromFriendLists(deviceId);
 
-                      // 身長と体重が選択されていない場合
-                      if (_selectedHeight == null || _selectedWeight == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('身長と体重を入力してください')),
-                        );
-                        _canSave = false;
-                      }
+                        // 自分のコレクション全削除
+                        await deleteUserCollections(deviceId);
 
-                      // IDが8文字未満の場合
-                      if (_idController.text.length < 8) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('IDを英数字８文字以上で入力してください')),
-                        );
-                        _canSave = false;
-                      }
-
-                      // 名前が未入力の場合
-                      if (_nameController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('名前を入力してください')),
-                        );
-                        _canSave = false;
-                      }
-
-                      // 全ての条件を満たしている場合
-                      if (_canSave) {
-                        // 処理を実行（例: saveInfoWeb）
-                        int con = await saveInfoWeb(
-                            _idController.text,
-                            _nameController.text,
-                            _dateController.text,
-                            deviceId,
-                            imageBytes,
-                            _selectedHeight!,
-                            _selectedWeight!,
-                            originId);
-
-                        originId = _idController.text;
-
-                        // 処理が終わったらダイアログを閉じる
-                        Navigator.pop(context); // ダイアログを閉じる
-
-                        if (con == 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('このIDは既に使用されています')),
-                          );
-                        } else if (con == 2) {
-                          // 成功メッセージを表示
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('プロフィール情報が保存されました！')),
-                          );
-                        }
-                      } else {
-                        // 処理が無効な場合でもダイアログを閉じる
-                        Navigator.pop(context);
+                        // 必要であればログアウトやページ遷移も
+                        // Navigator.pushReplacement(...);
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -574,10 +667,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                             BorderSide(color: Color.fromARGB(255, 209, 209, 0)),
                       ),
                     ),
-                    child: Text("変更を保存する"),
+                    child: Text("アカウント情報を削除する"),
                   ),
-
-                  SizedBox(height: 40),
+                  const SizedBox(height: 16)
                 ],
               ),
             ),

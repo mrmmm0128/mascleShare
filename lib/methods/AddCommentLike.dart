@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:muscle_share/methods/FetchInfoProfile.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
 
 class AddCommentLike {
   static void editLike(String mydeviceId, List<String> likeDeviceIds,
@@ -25,6 +26,7 @@ class AddCommentLike {
     String date,
     String comment,
   ) async {
+    String mydeviceId = await getDeviceIDweb();
     try {
       Map<String, dynamic> infoList = await fetchInfo();
       String url = infoList["url"];
@@ -35,7 +37,7 @@ class AddCommentLike {
 
       await docRef.update({
         '$date.comment': FieldValue.arrayUnion([
-          {"name": name, "url": url, "comment": comment}
+          {"name": name, "url": url, "comment": comment, "deviceId": mydeviceId}
         ])
       });
     } catch (e, stackTrace) {

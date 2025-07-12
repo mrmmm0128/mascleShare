@@ -6,7 +6,6 @@ import 'package:muscle_share/methods/AddFriendMethod.dart';
 import 'package:muscle_share/methods/PhotoSelect.dart';
 import 'package:muscle_share/methods/fetchInfoProfile.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
-import 'package:muscle_share/pages/Header.dart';
 import 'package:muscle_share/pages/OtherBestRecordsInput.dart';
 import 'package:muscle_share/pages/profile.dart';
 
@@ -75,8 +74,206 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Header(
-        title: 'プロフィール',
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // ← 左寄せ
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // ✅ プロフィール画像（左端）
+
+                Text(
+                  "プロフィール",
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 209, 209, 0),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final List<String> reasons = [
+                      "スパム行為",
+                      "不適切なコンテンツ",
+                      "嫌がらせや誹謗中傷",
+                      "その他"
+                    ];
+                    String? selectedReason;
+                    final TextEditingController otherReasonController =
+                        TextEditingController();
+
+                    final bool? confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) {
+                        return StatefulBuilder(builder: (context, setState) {
+                          return AlertDialog(
+                            backgroundColor: Colors.black,
+                            title: Text(
+                              "通報理由を選択",
+                              style: TextStyle(
+                                  color: Color.fromARGB(255, 209, 209, 0)),
+                            ),
+                            content: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ...reasons
+                                      .map((reason) => RadioListTile<String>(
+                                            activeColor: Color.fromARGB(
+                                                255, 209, 209, 0),
+                                            title: Text(
+                                              reason,
+                                              style: TextStyle(
+                                                  color: Color.fromARGB(
+                                                      255, 209, 209, 0)),
+                                            ),
+                                            value: reason,
+                                            groupValue: selectedReason,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                selectedReason = value;
+                                              });
+                                            },
+                                          )),
+                                  if (selectedReason == "その他")
+                                    TextField(
+                                      controller: otherReasonController,
+                                      style: TextStyle(
+                                          color:
+                                              Color.fromARGB(255, 209, 209, 0)),
+                                      maxLines: 3,
+                                      decoration: InputDecoration(
+                                        hintText: "通報理由を入力",
+                                        hintStyle: TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 150, 150, 50)),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Color.fromARGB(
+                                                  255, 209, 209, 0)),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Color.fromARGB(
+                                                  255, 209, 209, 0)),
+                                        ),
+                                      ),
+                                    )
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: Text("キャンセル",
+                                    style: TextStyle(
+                                        color:
+                                            Color.fromARGB(255, 209, 209, 0))),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: Text("通報する",
+                                    style: TextStyle(
+                                        color:
+                                            Color.fromARGB(255, 209, 209, 0))),
+                              ),
+                            ],
+                          );
+                        });
+                      },
+                    );
+
+                    if (confirmed != true || selectedReason == null) return;
+
+                    final String reason = selectedReason == "その他"
+                        ? otherReasonController.text.trim()
+                        : selectedReason!;
+
+                    if (reason.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("通報理由を入力してください"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    final String reportedDeviceId = widget.deviceId;
+                    final String reporterDeviceId = await getDeviceIDweb();
+
+                    final docRef = FirebaseFirestore.instance
+                        .collection("report_list")
+                        .doc(reportedDeviceId);
+
+                    final docSnapshot = await docRef.get();
+
+                    if (docSnapshot.exists) {
+                      List<Map<String, String>> reporters =
+                          List<Map<String, String>>.from(
+                              docSnapshot.data()?['reporters'] ?? []);
+
+                      bool alreadyReported = reporters.any(
+                          (report) => report['reporter'] == reporterDeviceId);
+
+                      if (!alreadyReported) {
+                        reporters.add({
+                          'reporter': reporterDeviceId,
+                          'reason': reason,
+                          'timestamp': DateTime.now().toIso8601String(),
+                        });
+                        await docRef.set(
+                            {'reporters': reporters}, SetOptions(merge: true));
+                      }
+                    } else {
+                      await docRef.set({
+                        'reporters': [
+                          {
+                            'reporter': reporterDeviceId,
+                            'reason': reason,
+                            'timestamp': DateTime.now().toIso8601String(),
+                          }
+                        ]
+                      });
+                    }
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("通報しました"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Color.fromARGB(255, 209, 209, 0),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Color.fromARGB(255, 209, 209, 0)),
+                    ),
+                  ),
+                  child: Text("通報する"),
+                )
+              ],
+            ),
+            SizedBox(height: 8),
+            Container(
+              width: double.infinity, // 横幅いっぱい
+              height: 1,
+              color: Colors.grey, // 境界線の色
+            ),
+          ],
+        ),
       ),
       backgroundColor: Colors.black,
       body: _isLoading

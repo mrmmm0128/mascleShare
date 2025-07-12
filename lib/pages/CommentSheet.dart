@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 //import 'package:intl/intl.dart';
 import 'package:muscle_share/methods/AddCommentLike.dart';
+import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/pages/OtherProfile.dart';
 
 class CommentSheet extends StatefulWidget {
   final String deviceId;
@@ -16,10 +18,12 @@ class CommentSheet extends StatefulWidget {
 class _CommentSheetState extends State<CommentSheet> {
   final TextEditingController _controller = TextEditingController();
   List<Map<String, String>> commentList = [];
+  String myDeviceId = "";
 
   @override
   void initState() {
     super.initState();
+    myDeviceId = getDeviceIDweb();
   }
 
   @override
@@ -51,20 +55,89 @@ class _CommentSheetState extends State<CommentSheet> {
               final comments = (data[widget.date]?['comment'] ?? []) as List;
 
               return SizedBox(
-                height: 200,
+                height: 400,
                 child: ListView.builder(
                   itemCount: comments.length,
                   itemBuilder: (context, index) {
                     final comment = comments[index];
                     return ListTile(
                       leading: comment["url"] != ""
-                          ? CircleAvatar(
-                              backgroundImage:
-                                  NetworkImage(comment['url'] ?? ''),
-                            )
-                          : CircleAvatar(
-                              backgroundColor: Colors.grey,
-                              child: Icon(Icons.person, color: Colors.white),
+                          ? GestureDetector(
+                              onTap: () async {
+                                final String deviceId = comment["deviceId"];
+
+                                if (myDeviceId != deviceId) {
+                                  // Firestore にコレクションが存在するかチェック（例: profile ドキュメントを見る）
+                                  final profileSnapshot =
+                                      await FirebaseFirestore.instance
+                                          .collection(deviceId)
+                                          .doc("profile")
+                                          .get();
+
+                                  if (profileSnapshot.exists) {
+                                    // 存在する場合 → 遷移
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            otherProfileScreen(
+                                          deviceId: deviceId,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    // 存在しない場合 → エラーメッセージ表示
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("すでに存在しないアカウントです"),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              child: CircleAvatar(
+                                backgroundImage:
+                                    NetworkImage(comment['url'] ?? ''),
+                              ))
+                          : GestureDetector(
+                              onTap: () async {
+                                final String deviceId = comment["deviceId"];
+
+                                if (myDeviceId != deviceId) {
+                                  // Firestore にコレクションが存在するかチェック（例: profile ドキュメントを見る）
+                                  final profileSnapshot =
+                                      await FirebaseFirestore.instance
+                                          .collection(deviceId)
+                                          .doc("profile")
+                                          .get();
+
+                                  if (profileSnapshot.exists) {
+                                    // 存在する場合 → 遷移
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            otherProfileScreen(
+                                          deviceId: deviceId,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    // 存在しない場合 → エラーメッセージ表示
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("すでに存在しないアカウントです"),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              child: CircleAvatar(
+                                backgroundColor: Colors.grey,
+                                child: Icon(Icons.person, color: Colors.white),
+                              ),
                             ),
                       title: comment["name"] != ""
                           ? Text(comment['name'] ?? "Not defined",
