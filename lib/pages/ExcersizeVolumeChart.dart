@@ -55,18 +55,18 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
     });
 
     if (selectedExercise != null && allExercises.contains(selectedExercise)) {
-      _loadVolumeData(selectedExercise!);
+      _loadMaxRMData(selectedExercise!);
     }
   }
 
-  Future<void> _loadVolumeData(String exerciseName) async {
+  Future<void> _loadMaxRMData(String exerciseName) async {
     String deviceId = await getDeviceIDweb();
     final doc = await FirebaseFirestore.instance
         .collection(deviceId)
         .doc("history")
         .get();
 
-    final Map<DateTime, double> tempVolumeByDate = {};
+    final Map<DateTime, double> tempMaxRMByDate = {};
 
     if (doc.exists) {
       final data = doc.data();
@@ -78,24 +78,35 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
           final date = rawDate != null
               ? DateTime(rawDate.year, rawDate.month, rawDate.day)
               : null;
+
           final sets = value[exerciseName];
 
           if (date != null && sets is List) {
-            double total = 0.0;
+            double maxRM = 0.0;
+
             for (var set in sets) {
-              final weight = (set['weight'] ?? 0).toDouble();
-              final reps = (set['reps'] ?? 0).toDouble();
-              total += weight * reps;
+              final double weight = (set['weight'] ?? 0).toDouble();
+              final double reps = (set['reps'] ?? 0).toDouble();
+
+              if (weight > 0 && reps > 0) {
+                final rm = weight * (1 + reps / 30); // Epley式
+                if (rm > maxRM) {
+                  maxRM = rm;
+                }
+              }
             }
-            tempVolumeByDate[date] = total;
+
+            tempMaxRMByDate[date] = maxRM;
           }
         }
       });
     }
-    print(tempVolumeByDate);
+
+    print(tempMaxRMByDate);
 
     setState(() {
-      volumeByDate = tempVolumeByDate;
+      volumeByDate =
+          tempMaxRMByDate; // volumeByDate ではなく maxRMByDate に変えるならここも変更
     });
   }
 
@@ -150,7 +161,7 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
                     setState(() {
                       selectedExercise = value;
                     });
-                    _loadVolumeData(value);
+                    _loadMaxRMData(value);
                   }
                 },
                 items: allExercises.map((exercise) {

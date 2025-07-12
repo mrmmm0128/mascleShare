@@ -30,7 +30,6 @@ class _HeaderState extends State<Header> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.black,

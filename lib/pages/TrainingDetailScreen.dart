@@ -93,6 +93,9 @@ class TrainingDetailScreen extends StatelessWidget {
                               final weight = set['weight'] ?? 0;
                               final reps = set['reps'] ?? 0;
 
+                              // ▼ このセットの推定1RM（Epley式）
+                              final rm = weight * (1 + 0.0333 * reps);
+
                               return Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 8),
@@ -106,16 +109,32 @@ class TrainingDetailScreen extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text("${i + 1}セット目",
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14)),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        "${weight}kg × ${reps}回",
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 15),
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Text("${i + 1}セット目",
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 14)),
+                                            SizedBox(width: 10),
+                                            Text(
+                                              "${weight}kg × ${reps}回",
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15),
+                                            ),
+                                          ],
+                                        ),
                                       ),
+                                      // ▼ Max RM セットだった場合だけ右端に表示
+                                      if (rm == maxEstimatedRm)
+                                        Text(
+                                          "🌟 Max RM",
+                                          style: TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 209, 209, 0),
+                                              fontWeight: FontWeight.bold),
+                                        ),
                                     ],
                                   ),
                                 ),
