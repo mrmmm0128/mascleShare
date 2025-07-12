@@ -322,6 +322,30 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
                   );
 
                   Navigator.of(context).pop();
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(
+                        "入力が必要です",
+                        style:
+                            TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                      ),
+                      content: Text(
+                        "テンプレート名と種目を選択してください",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.black,
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text("OK",
+                              style: TextStyle(
+                                  color: Color.fromARGB(255, 209, 209, 0))),
+                        ),
+                      ],
+                    ),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(

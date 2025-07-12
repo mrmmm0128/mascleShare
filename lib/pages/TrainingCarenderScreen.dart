@@ -136,7 +136,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "総ボリューム推移",
+                  "MaxRM推移",
                   style: TextStyle(
                     color: Color.fromARGB(255, 209, 209, 0),
                     fontSize: 15,
