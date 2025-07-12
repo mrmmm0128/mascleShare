@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:muscle_share/methods/PhotoSelect.dart';
 import 'package:muscle_share/methods/FetchInfoProfile.dart';
-import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/pages/Header.dart';
 import 'package:muscle_share/pages/OtherBestRecordsInput.dart';
 import 'package:muscle_share/pages/profile.dart';

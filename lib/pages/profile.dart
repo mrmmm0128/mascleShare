@@ -5,7 +5,7 @@ import 'package:muscle_share/methods/DeleteAccount.dart';
 import 'package:muscle_share/methods/PhotoCropper.dart';
 import 'package:muscle_share/methods/PhotoSelect.dart';
 import 'package:muscle_share/methods/FetchInfoProfile.dart';
-import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/methods/SaveDataForProfile.dart';
 import 'package:muscle_share/pages/BestRecordsInput.dart';
 import 'package:muscle_share/data/PreAndCity.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/UseTemplates.dart';
-import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/pages/Header.dart';
 import 'package:muscle_share/pages/HistoryRecording.dart';
 import 'package:muscle_share/pages/RecordTrainingScreen.dart';

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 //import 'package:intl/intl.dart';
 import 'package:muscle_share/methods/AddCommentLike.dart';
-import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/pages/OtherProfile.dart';
 
 class CommentSheet extends StatefulWidget {

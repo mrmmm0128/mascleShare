@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
 
 Future<void> updatePhotoInfo(BuildContext context, String uniqueKey) async {
   try {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/FetchInfoProfile.dart';
-import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/methods/SaveDataForProfile.dart';
 import 'package:muscle_share/pages/Header.dart';
 

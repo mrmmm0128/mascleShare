@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/AddFriendMethod.dart';
-import 'package:muscle_share/methods/GetDeviceId.dart';
+import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/pages/ConfirmOtherProfile.dart';
 import 'package:muscle_share/pages/FIndBroScreen.dart';
 import 'package:muscle_share/pages/Header.dart';
