@@ -23,7 +23,10 @@ class _CommentSheetState extends State<CommentSheet> {
   @override
   void initState() {
     super.initState();
-    myDeviceId = getDeviceIDweb();
+  }
+
+  Future<void> initialize() async {
+    myDeviceId = await getDeviceUUID();
   }
 
   @override

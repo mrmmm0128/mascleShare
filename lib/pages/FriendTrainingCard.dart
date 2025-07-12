@@ -35,11 +35,12 @@ class _FriendTrainingCardState extends State<FriendTrainingCard> {
   @override
   void initState() {
     super.initState();
-    mydeviceId = getDeviceIDweb();
+
     fetchOtherInfo(widget.friendDeviceId);
   }
 
   Future<void> fetchOtherInfo(String deviceId) async {
+    mydeviceId = await getDeviceUUID();
     try {
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
           .collection(deviceId)

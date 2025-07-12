@@ -45,7 +45,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
   }
 
   Future<void> initialize() async {
-    deviceId = await getDeviceIDweb();
+    deviceId = await getDeviceUUID();
   }
 
   void loadDraft() async {
