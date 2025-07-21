@@ -60,7 +60,7 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
   }
 
   Future<void> initialize() async {
-    deviceId = await getDeviceUUID();
+    deviceId = await getDeviceIDweb();
     loadTemplates();
   }
 
