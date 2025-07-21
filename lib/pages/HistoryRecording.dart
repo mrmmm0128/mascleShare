@@ -22,7 +22,7 @@ class _HistoryRecording extends State<HistoryRecording> {
   }
 
   Future<void> initialize() async {
-    deviceId = await getDeviceIDweb();
+    deviceId = await getDeviceUUID();
     setState(() {
       _isInitialized = true;
     });

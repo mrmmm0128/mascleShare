@@ -29,7 +29,7 @@ class _ToolSelectionScreenState extends State<ToolSelectionScreen> {
       _isLoading = true;
     });
 
-    myDeviceId = await getDeviceIDweb(); // 自分のデバイスIDを取得
+    myDeviceId = await getDeviceUUID(); // 自分のデバイスIDを取得
 
     try {
       // 友達のトレーニングデータを取得

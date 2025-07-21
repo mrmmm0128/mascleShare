@@ -3,21 +3,42 @@ import 'package:muscle_share/methods/FetchInfoProfile.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 
 class AddCommentLike {
-  static void editLike(String mydeviceId, List<String> likeDeviceIds,
+  static Future<void> editLike(String mydeviceId, List<String> likeDeviceIds,
       String date, String friendDeviceId) async {
+    print(likeDeviceIds);
     final docRef =
         FirebaseFirestore.instance.collection(friendDeviceId).doc('history');
+
+    final docRefNotf = FirebaseFirestore.instance
+        .collection(friendDeviceId)
+        .doc('notification');
 
     if (likeDeviceIds.contains(mydeviceId)) {
       // すでに含まれていれば「いいね解除」
       await docRef.update({
         '$date.like': FieldValue.arrayRemove([mydeviceId])
       });
+
+      if (friendDeviceId != mydeviceId) {
+        await docRefNotf.update({
+          'like.$date.$mydeviceId': FieldValue.delete(), // 通知からも削除（既読/未読に関係なく）
+        });
+      }
     } else {
       // 含まれていなければ「いいね追加」
       await docRef.update({
         '$date.like': FieldValue.arrayUnion([mydeviceId])
       });
+
+      if (friendDeviceId != mydeviceId) {
+        await docRefNotf.set({
+          'like': {
+            date: {
+              mydeviceId: false // 👈 初期状態は未読(false)
+            }
+          }
+        }, SetOptions(merge: true));
+      }
     }
   }
 
@@ -26,7 +47,7 @@ class AddCommentLike {
     String date,
     String comment,
   ) async {
-    String mydeviceId = await getDeviceIDweb();
+    String mydeviceId = await getDeviceUUID();
     try {
       Map<String, dynamic> infoList = await fetchInfo();
       String url = infoList["url"];
@@ -35,11 +56,24 @@ class AddCommentLike {
       final docRef =
           FirebaseFirestore.instance.collection(deviceId).doc('history');
 
+      final docRefNotf =
+          FirebaseFirestore.instance.collection(deviceId).doc('notification');
+
       await docRef.update({
         '$date.comment': FieldValue.arrayUnion([
           {"name": name, "url": url, "comment": comment, "deviceId": mydeviceId}
         ])
       });
+
+      if (deviceId != mydeviceId) {
+        await docRefNotf.set({
+          'comment': {
+            date: {
+              mydeviceId: false // 👈 初期状態は未読(false)
+            }
+          }
+        }, SetOptions(merge: true));
+      }
     } catch (e, stackTrace) {
       print("❌ コメント追加時にエラーが発生しました: $e");
       print(stackTrace);

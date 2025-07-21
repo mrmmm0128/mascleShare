@@ -29,7 +29,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
 
   Future<void> fetchFriendList() async {
     try {
-      deviceId = await getDeviceIDweb();
+      deviceId = await getDeviceUUID();
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
           .collection(deviceId)
           .doc("profile")
@@ -73,7 +73,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
 
   Future<void> fetchRequestList() async {
     try {
-      String deviceId = await getDeviceIDweb();
+      String deviceId = await getDeviceUUID();
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
           .collection(deviceId)
           .doc("profile")

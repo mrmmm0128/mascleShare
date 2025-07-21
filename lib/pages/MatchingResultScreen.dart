@@ -45,7 +45,7 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
   }
 
   Future<void> _fetchFilteredProfiles() async {
-    myDeviceId = await getDeviceIDweb();
+    myDeviceId = await getDeviceUUID();
 
     try {
       final snapshot =

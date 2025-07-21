@@ -40,7 +40,7 @@ class _FriendTrainingCardState extends State<FriendTrainingCard> {
   }
 
   Future<void> fetchOtherInfo(String deviceId) async {
-    mydeviceId = await getDeviceIDweb();
+    mydeviceId = await getDeviceUUID();
     try {
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
           .collection(deviceId)
@@ -197,7 +197,7 @@ class _FriendTrainingCardState extends State<FriendTrainingCard> {
                           setState(() {
                             AddCommentLike.editLike(mydeviceId, likeDeviceId,
                                 date, widget.friendDeviceId);
-                            print(mydeviceId);
+                            print(likeDeviceId);
 
                             if (isLiked) {
                               isLiked = false;

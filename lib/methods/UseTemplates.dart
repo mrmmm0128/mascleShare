@@ -18,8 +18,10 @@ class UseTemplates {
     List<Map<String, dynamic>> templates = [];
 
     for (final doc in templateDocs.docs) {
-      if (doc.id == 'profile' || doc.id == 'info' || doc.id == 'history')
-        continue;
+      if (doc.id == 'profile' ||
+          doc.id == 'info' ||
+          doc.id == 'history' ||
+          doc.id == "notification") continue;
 
       final data = doc.data();
       final exercises = List<String>.from(data['template'] ?? []);

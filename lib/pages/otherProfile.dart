@@ -42,7 +42,7 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
 
   Future<void> initializeProfile() async {
     infoList = await fetchOtherInfo(widget.deviceId);
-    myDeviceId = await getDeviceIDweb();
+    myDeviceId = await getDeviceUUID();
 
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
         .collection(myDeviceId)
@@ -179,12 +179,19 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
                                             Color.fromARGB(255, 209, 209, 0))),
                               ),
                               TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: Text("通報する",
-                                    style: TextStyle(
-                                        color:
-                                            Color.fromARGB(255, 209, 209, 0))),
+                                onPressed: () async {
+                                  // 通報理由入力ダイアログを閉じる
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('通報しました')),
+                                  );
+                                  Navigator.of(context).pop(true);
+                                },
+                                child: Text(
+                                  "通報する",
+                                  style: TextStyle(
+                                      color: Color.fromARGB(255, 209, 209, 0)),
+                                ),
                               ),
                             ],
                           );
@@ -209,7 +216,7 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
                     }
 
                     final String reportedDeviceId = widget.deviceId;
-                    final String reporterDeviceId = await getDeviceIDweb();
+                    final String reporterDeviceId = await getDeviceUUID();
 
                     final docRef = FirebaseFirestore.instance
                         .collection("report_list")

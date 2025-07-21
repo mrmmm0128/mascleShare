@@ -11,6 +11,9 @@ import 'package:muscle_share/pages/BestRecordsInput.dart';
 import 'package:muscle_share/data/PreAndCity.dart';
 
 class ProfileScreen extends StatefulWidget {
+  final String? condition;
+
+  const ProfileScreen({super.key, this.condition}); // ← ここに `condition` が必要
   @override
   ProfileScreenState createState() => ProfileScreenState();
 }
@@ -20,6 +23,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   late Uint8List imageBytes = Uint8List(0);
+
   XFile? pickedFile;
   String deviceId = "";
   late Map<String, dynamic> infoList = {};
@@ -34,6 +38,18 @@ class ProfileScreenState extends State<ProfileScreen> {
   String? selectedPrefecture;
   String? selectedCity;
   late String originId;
+  // 禁止ワードリスト（必要に応じて拡張可）
+  final List<String> prohibitedWords = [
+    'ちんこ',
+    'まんこ',
+    'うんこ',
+    'しね',
+    'fuck',
+    '死ね',
+    'sex',
+    'セックス',
+    'ち○こ', // 回避的表記対策も追加可能
+  ];
 
   final Map<String, List<String>> prefectureData = PreAndCity.data;
 
@@ -44,7 +60,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> initializeProfile() async {
-    deviceId = await getDeviceIDweb();
+    deviceId = await getDeviceUUID();
     infoList = await fetchInfo();
 
     setState(() {
@@ -62,7 +78,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    deviceId = await getDeviceIDweb(); // デバイス ID を取得
+    deviceId = await getDeviceUUID(); // デバイス ID を取得
 
     try {
       pickedFile = await picker.pickImage(source: ImageSource.camera);
@@ -116,7 +132,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Color.fromARGB(255, 209, 209, 0),
                   ),
@@ -136,6 +152,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
+        automaticallyImplyLeading: false,
         elevation: 0,
         iconTheme: IconThemeData(color: Color.fromARGB(255, 209, 209, 0)),
         title: Column(
@@ -197,6 +214,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                       _canSave = false;
                     }
 
+                    if (prohibitedWords
+                        .any((word) => _nameController.text.contains(word))) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('不適切な単語が名前に含まれています')),
+                      );
+                      _canSave = false;
+                    }
+
                     // 全ての条件を満たしている場合
                     if (_canSave) {
                       // 処理を実行（例: saveInfoWeb）
@@ -224,6 +249,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('プロフィール情報が保存されました！')),
                         );
+                        if (widget.condition == "firstTime") {
+                          Navigator.pop(context, "completed");
+                        }
                       }
                     } else {
                       // 処理が無効な場合でもダイアログを閉じる
@@ -255,9 +283,8 @@ class ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.black,
       body: _isLoading
           ? Center(
-              child: Theme(
-                data: ThemeData(primarySwatch: Colors.yellow),
-                child: const CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                color: Colors.yellowAccent,
               ),
             )
           : SingleChildScrollView(
@@ -335,7 +362,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   buildSectionCard(
-                    title: "Your Id",
+                    title: "Id",
                     child: TextField(
                       controller: _idController,
                       style: TextStyle(color: Colors.white),
@@ -352,7 +379,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   buildSectionCard(
-                    title: "User Name",
+                    title: "ユーザーネーム",
                     child: TextField(
                       controller: _nameController,
                       style: TextStyle(color: Colors.white),
@@ -369,7 +396,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   buildSectionCard(
-                    title: "Start Day",
+                    title: "トレーニングを始めた日",
                     child: GestureDetector(
                       onTap: () async {
                         DateTime? selectedDate = await showDatePicker(
@@ -402,12 +429,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   buildSectionCard(
-                    title: "Personal Data",
+                    title: "身体情報",
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "height",
+                          "身長",
                           style: TextStyle(
                               color: Color.fromARGB(255, 209, 209, 0),
                               fontSize: 16),
@@ -444,7 +471,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                         ),
                         SizedBox(height: 12),
                         Text(
-                          "weight",
+                          "体重",
                           style: TextStyle(
                               color: Color.fromARGB(255, 209, 209, 0),
                               fontSize: 16),
@@ -570,7 +597,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   //     )),
 
                   buildSectionCard(
-                    title: "Best Records of your training",
+                    title: "トレーニングの最高記録",
                     child: GestureDetector(
                       onTap: () {
                         Navigator.push(
@@ -594,7 +621,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                         child: Text(
-                          'Tap to input your Best Records',
+                          'タップして最高記録を入力しましょう',
                           style: TextStyle(
                             fontSize: 16,
                             color: Color.fromARGB(255, 209, 209, 0),
@@ -605,70 +632,74 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      bool confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                    backgroundColor: Colors.black,
-                                    title: Text("本当に削除しますか？",
-                                        style: TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 209, 209, 0))),
-                                    content: Text(
-                                        "プロフィール情報、これまで記録したトレーニング記録、broリストの内容が消えてしまいますがよろしいですか？",
-                                        style: TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 209, 209, 0))),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(false),
-                                        child: Text(
-                                          "キャンセル",
-                                          style: TextStyle(
-                                              color: Color.fromARGB(
-                                                  255, 209, 209, 0)),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(true),
-                                        child: Text(
-                                          "OK",
-                                          style: TextStyle(
-                                              color: Color.fromARGB(
-                                                  255, 209, 209, 0)),
-                                        ),
-                                      ),
-                                    ],
-                                  )) ??
-                          false;
+                  widget.condition != "firstTime"
+                      ? ElevatedButton(
+                          onPressed: () async {
+                            bool confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                          backgroundColor: Colors.black,
+                                          title: Text("本当に削除しますか？",
+                                              style: TextStyle(
+                                                  color: Color.fromARGB(
+                                                      255, 209, 209, 0))),
+                                          content: Text(
+                                              "プロフィール情報、これまで記録したトレーニング記録、broリストの内容が消えてしまいますがよろしいですか？",
+                                              style: TextStyle(
+                                                  color: Color.fromARGB(
+                                                      255, 209, 209, 0))),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(false),
+                                              child: Text(
+                                                "キャンセル",
+                                                style: TextStyle(
+                                                    color: Color.fromARGB(
+                                                        255, 209, 209, 0)),
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              child: Text(
+                                                "OK",
+                                                style: TextStyle(
+                                                    color: Color.fromARGB(
+                                                        255, 209, 209, 0)),
+                                              ),
+                                            ),
+                                          ],
+                                        )) ??
+                                false;
 
-                      if (confirmed) {
-                        // broリストから自分を削除（相手側から）
-                        await removeFromFriendLists(deviceId);
+                            if (confirmed) {
+                              // broリストから自分を削除（相手側から）
+                              await removeFromFriendLists(deviceId);
 
-                        // 自分のコレクション全削除
-                        await deleteUserCollections(deviceId);
+                              // 自分のコレクション全削除
+                              await deleteUserCollections(deviceId);
 
-                        // 必要であればログアウトやページ遷移も
-                        // Navigator.pushReplacement(...);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Color.fromARGB(255, 209, 209, 0),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side:
-                            BorderSide(color: Color.fromARGB(255, 209, 209, 0)),
-                      ),
-                    ),
-                    child: Text("アカウント情報を削除する"),
-                  ),
+                              // 必要であればログアウトやページ遷移も
+                              // Navigator.pushReplacement(...);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            foregroundColor: Color.fromARGB(255, 209, 209, 0),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                  color: Color.fromARGB(255, 209, 209, 0)),
+                            ),
+                          ),
+                          child: Text("アカウント情報を削除する"),
+                        )
+                      : const SizedBox(height: 16),
                   const SizedBox(height: 16)
                 ],
               ),

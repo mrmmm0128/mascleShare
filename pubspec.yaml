@@ -51,6 +51,7 @@ dependencies:
   flutter_local_notifications: ^19.1.0
   cloud_functions: ^5.5.1
   shared_preferences: ^2.2.2
+  crop_your_image: ^0.7.2
 
 dev_dependencies:
   flutter_test:
@@ -69,15 +70,11 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
 
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
-assets:
-  - icons/upper-body.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:  # ✅ flutter ブロックの中に入れる（スペース2つ）
+    - assets/icons/S__22331404.png
+  
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -26,7 +26,7 @@ class _CommentSheetState extends State<CommentSheet> {
   }
 
   Future<void> initialize() async {
-    myDeviceId = await getDeviceIDweb();
+    myDeviceId = await getDeviceUUID();
   }
 
   @override
@@ -168,10 +168,57 @@ class _CommentSheetState extends State<CommentSheet> {
           const SizedBox(height: 12),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 209, 209, 0),
-                foregroundColor: Colors.black),
+              backgroundColor: Color.fromARGB(255, 209, 209, 0),
+              foregroundColor: Colors.black,
+            ),
             onPressed: () async {
               final text = _controller.text.trim();
+
+              // 不適切な単語リスト
+              final List<String> prohibitedWords = [
+                'ちんこ',
+                'まんこ',
+                'うんこ',
+                '死ね',
+                'しね',
+                'fuck',
+                'sex',
+                'セックス',
+                'ち○こ',
+                'f○ck'
+              ];
+
+              // NGワードを含んでいるかチェック（大文字小文字問わず）
+              bool containsNG = prohibitedWords.any(
+                (word) => text.toLowerCase().contains(word.toLowerCase()),
+              );
+
+              if (containsNG) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: Colors.black,
+                    title: Text(
+                      "不適切な内容",
+                      style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
+                    ),
+                    content: Text(
+                      "コメントに不適切な表現が含まれています。",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text("OK",
+                            style: TextStyle(
+                                color: Color.fromARGB(255, 209, 209, 0))),
+                      ),
+                    ],
+                  ),
+                );
+                return;
+              }
+
               if (text.isNotEmpty) {
                 await AddCommentLike.addComment(
                     widget.deviceId, widget.date, text);

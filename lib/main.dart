@@ -4,7 +4,7 @@ import 'package:muscle_share/firebase_options.dart';
 //import 'package:muscle_share/methods/alert.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:muscle_share/pages/TopPage.dart';
+import 'package:muscle_share/pages/SplashScreen.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -92,7 +92,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         canvasColor: Colors.grey[900], // ← これが BottomNavigationBar の背景に効く！
       ),
-      home: TopPage(),
+      home: SplashScreen(),
     );
   }
 }
