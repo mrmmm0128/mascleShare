@@ -26,7 +26,7 @@ class _CommentSheetState extends State<CommentSheet> {
   }
 
   Future<void> initialize() async {
-    myDeviceId = await getDeviceUUID();
+    myDeviceId = await getDeviceIDweb();
   }
 
   @override

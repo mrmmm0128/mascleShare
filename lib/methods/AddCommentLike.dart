@@ -47,7 +47,7 @@ class AddCommentLike {
     String date,
     String comment,
   ) async {
-    String mydeviceId = await getDeviceUUID();
+    String mydeviceId = await getDeviceIDweb();
     try {
       Map<String, dynamic> infoList = await fetchInfo();
       String url = infoList["url"];

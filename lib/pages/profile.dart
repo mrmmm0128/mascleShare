@@ -60,7 +60,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> initializeProfile() async {
-    deviceId = await getDeviceUUID();
+    deviceId = await getDeviceIDweb();
     infoList = await fetchInfo();
 
     setState(() {
@@ -78,7 +78,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   // カメラを起動して画像を取得する
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    deviceId = await getDeviceUUID(); // デバイス ID を取得
+    deviceId = await getDeviceIDweb(); // デバイス ID を取得
 
     try {
       pickedFile = await picker.pickImage(source: ImageSource.camera);

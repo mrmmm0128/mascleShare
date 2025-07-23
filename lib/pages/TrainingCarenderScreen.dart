@@ -24,7 +24,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
   }
 
   Future<void> _loadTrainingDates() async {
-    String deviceId = await getDeviceUUID();
+    String deviceId = await getDeviceIDweb();
     final doc = await FirebaseFirestore.instance
         .collection(deviceId)
         .doc('history')
