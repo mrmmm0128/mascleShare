@@ -215,7 +215,7 @@ class _CommentSheetState extends State<CommentSheet> {
           FlutterMentions(
             key: _key,
             style: const TextStyle(color: Colors.white),
-            suggestionPosition: SuggestionPosition.Bottom,
+            suggestionPosition: SuggestionPosition.Top,
             decoration: const InputDecoration(
               hintText: 'コメントを入力...',
               hintStyle: TextStyle(color: Colors.white54),

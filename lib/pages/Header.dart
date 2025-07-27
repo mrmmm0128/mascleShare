@@ -99,14 +99,29 @@ class _HeaderState extends State<Header> {
     Map<String, dynamic> updatedMap = {};
 
     Future<void> processSection(
-        String key, IconData icon, Color iconColor) async {
+      String key,
+      IconData icon,
+      Color iconColor,
+    ) async {
       if (data?[key] is Map<String, dynamic>) {
         final map = data![key] as Map<String, dynamic>;
+
+        // 通知タイトル
+        String titleLabel;
+        if (key == 'like') {
+          titleLabel = '❤️ いいね通知';
+        } else if (key == 'comment') {
+          titleLabel = '💬 コメント通知';
+        } else if (key == 'mention') {
+          titleLabel = '🏷 メンション通知';
+        } else {
+          titleLabel = '🔔 通知';
+        }
 
         notifications.add(Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Text(
-            key == 'like' ? '❤️ いいね通知' : '💬 コメント通知',
+            titleLabel,
             style: const TextStyle(color: Colors.yellowAccent),
           ),
         ));
@@ -118,6 +133,7 @@ class _HeaderState extends State<Header> {
           if (nested is Map<String, dynamic>) {
             for (var deviceEntry in nested.entries) {
               final fromId = deviceEntry.key;
+
               final profileSnapshot = await FirebaseFirestore.instance
                   .collection(fromId)
                   .doc("profile")
@@ -125,14 +141,27 @@ class _HeaderState extends State<Header> {
 
               final name = profileSnapshot.data()?['name'] ?? 'Unknown';
 
+              // 通知内容
+              String actionText;
+              if (key == 'like') {
+                actionText = "いいねしました";
+              } else if (key == 'comment') {
+                actionText = "コメントしました";
+              } else if (key == 'mention') {
+                actionText = "あなたをメンションしました";
+              } else {
+                actionText = "アクションがありました";
+              }
+
               notifications.add(ListTile(
                 leading: Icon(icon, color: iconColor),
                 title: Text(
-                  "$name さんが $date に${key == 'like' ? "いいね" : "コメント"}しました",
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+                  "$name さんが $date に $actionText",
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
                 ),
               ));
 
+              // 既読フラグ更新用
               updatedMap["$key.$date.$fromId"] = true;
             }
           }
@@ -140,9 +169,9 @@ class _HeaderState extends State<Header> {
       }
     }
 
-    processSection("like", Icons.favorite, Colors.red);
-    processSection("comment", Icons.comment, Colors.blue);
-    processSection("mention", Icons.alternate_email, Colors.amber);
+    await processSection("like", Icons.favorite, Colors.red);
+    await processSection("comment", Icons.comment, Colors.blue);
+    await processSection("mention", Icons.alternate_email, Colors.amber);
 
     if (notifications.isEmpty) {
       notifications.add(

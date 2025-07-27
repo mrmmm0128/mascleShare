@@ -51,6 +51,13 @@ class AddCommentLike {
     final myDeviceId = await getDeviceUUID();
     print(deviceId);
     print(mentionedIds);
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection(deviceId)
+        .doc("profile")
+        .get();
+
+    Map<String, dynamic>? data = snapshot.data() as Map<String, dynamic>?;
+    String nameOrigin = data!["name"];
 
     try {
       final info = await fetchInfo(); // {url, name, ...}
@@ -89,8 +96,6 @@ class AddCommentLike {
 
       // メンションされたユーザーへの「メンション通知」
       for (final mentionedId in mentionedIds) {
-        if (mentionedId == deviceId || mentionedId == myDeviceId) continue;
-
         print(mentionedId);
         final mentionedNotfRef = FirebaseFirestore.instance
             .collection(mentionedId)
@@ -136,7 +141,7 @@ class AddCommentLike {
       if (deviceId != mydeviceId) {
         await docRefNotf.set({
           'comment': {
-            date: {
+            "$nameさんの$dateの投稿で": {
               mydeviceId: false // 👈 初期状態は未読(false)
             }
           }
