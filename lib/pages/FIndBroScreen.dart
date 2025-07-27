@@ -374,6 +374,7 @@ class _FindBroScreenState extends State<FindBroScreen> {
                 icon: Icon(Icons.search),
                 label: Text("検索する"),
                 onPressed: () {
+                  print(_selectedOptions);
                   // 検索ロジックをここに実装
                   Navigator.push(
                     context,

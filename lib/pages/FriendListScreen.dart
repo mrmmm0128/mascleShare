@@ -5,7 +5,7 @@ import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/pages/ConfirmOtherProfile.dart';
 import 'package:muscle_share/pages/FIndBroScreen.dart';
 import 'package:muscle_share/pages/Header.dart';
-import 'package:muscle_share/pages/otherProfile.dart';
+import 'package:muscle_share/pages/OtherProfile.dart';
 
 class FriendListScreen extends StatefulWidget {
   @override

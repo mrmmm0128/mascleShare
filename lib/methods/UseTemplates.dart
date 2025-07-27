@@ -45,7 +45,7 @@ class UseTemplates {
   }
 
   static Future<void> saveTraining(String deviceId, String nameTemplate,
-      Map<String, List<Map<String, dynamic>>> template) async {
+      Map<String, dynamic> template) async {
     String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     await FirebaseFirestore.instance

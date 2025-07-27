@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/pages/Header.dart';
-import 'package:muscle_share/pages/otherProfile.dart';
+import 'package:muscle_share/pages/OtherProfile.dart';
 
 class MatchingResultScreen extends StatefulWidget {
   final List<String>? selectedOptions;
@@ -54,8 +54,9 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
       final filtered = snapshot.docs
           .where((doc) =>
               !doc.id.contains("date") && doc.id != "training_together")
-          .take(40)
+          .take(4000)
           .toList();
+      print(filtered);
 
       List<Map<String, dynamic>> results = [];
 
@@ -101,8 +102,6 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
                   print("❌ startDayの解析に失敗しました: $e");
                   matches = false;
                 }
-              } else {
-                matches = false;
               }
             }
 

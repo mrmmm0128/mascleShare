@@ -57,7 +57,7 @@ class _HeaderState extends State<Header> {
     if (notfDoc.exists) {
       final data = notfDoc.data();
 
-      for (final key in ['like', 'comment']) {
+      for (final key in ['like', 'comment', 'mention']) {
         if (data?[key] is Map<String, dynamic>) {
           final map = data![key] as Map<String, dynamic>;
           for (var entry in map.entries) {
@@ -98,7 +98,8 @@ class _HeaderState extends State<Header> {
     List<Widget> notifications = [];
     Map<String, dynamic> updatedMap = {};
 
-    void processSection(String key, IconData icon, Color iconColor) {
+    Future<void> processSection(
+        String key, IconData icon, Color iconColor) async {
       if (data?[key] is Map<String, dynamic>) {
         final map = data![key] as Map<String, dynamic>;
 
@@ -117,11 +118,17 @@ class _HeaderState extends State<Header> {
           if (nested is Map<String, dynamic>) {
             for (var deviceEntry in nested.entries) {
               final fromId = deviceEntry.key;
+              final profileSnapshot = await FirebaseFirestore.instance
+                  .collection(fromId)
+                  .doc("profile")
+                  .get();
+
+              final name = profileSnapshot.data()?['name'] ?? 'Unknown';
 
               notifications.add(ListTile(
                 leading: Icon(icon, color: iconColor),
                 title: Text(
-                  "$fromId さんが $date に${key == 'like' ? "いいね" : "コメント"}しました",
+                  "$name さんが $date に${key == 'like' ? "いいね" : "コメント"}しました",
                   style: TextStyle(color: Colors.white, fontSize: 13),
                 ),
               ));
@@ -135,6 +142,7 @@ class _HeaderState extends State<Header> {
 
     processSection("like", Icons.favorite, Colors.red);
     processSection("comment", Icons.comment, Colors.blue);
+    processSection("mention", Icons.alternate_email, Colors.amber);
 
     if (notifications.isEmpty) {
       notifications.add(

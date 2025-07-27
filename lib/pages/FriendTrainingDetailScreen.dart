@@ -91,12 +91,16 @@ class FriendTrainingDetailScreen extends StatelessWidget {
 
                 // 種目ごとの詳細
                 // 種目ごとの詳細（"comment"や"like"などの無関係データを除外）
-                ...exercises.entries
-                    .where((entry) =>
-                        entry.value is List &&
-                        (entry.value as List).isNotEmpty &&
-                        (entry.value as List).first is Map)
-                    .map((entry) {
+                ...exercises.entries.where((entry) {
+                  final key = entry.key;
+                  final value = entry.value;
+                  return key != "like" &&
+                      key != "comment" &&
+                      key != "isPublic" &&
+                      value is List &&
+                      (value).isNotEmpty &&
+                      (value).first is Map;
+                }).map((entry) {
                   final exerciseName = entry.key;
                   final sets = List<Map<String, dynamic>>.from(entry.value);
 

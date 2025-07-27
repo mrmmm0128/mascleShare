@@ -124,11 +124,13 @@ class _FriendTrainingCardState extends State<FriendTrainingCard> {
     double totalVolume = 0.0;
     Map<String, dynamic> exerciseMap = widget.training["data"] ?? {};
     exerciseMap.forEach((exerciseName, sets) {
-      for (var set in sets) {
-        if (exerciseName != "like") {
-          final weight = (set["weight"] ?? 0).toDouble();
-          final reps = (set["reps"] ?? 0).toDouble();
-          totalVolume += weight * reps;
+      if (!["like", "comment", "isPublic"].contains(exerciseName)) {
+        if (sets is List) {
+          for (var set in sets) {
+            final weight = (set["weight"] ?? 0).toDouble();
+            final reps = (set["reps"] ?? 0).toDouble();
+            totalVolume += weight * reps;
+          }
         }
       }
     });

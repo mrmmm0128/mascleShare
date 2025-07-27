@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mentions/flutter_mentions.dart';
 import 'package:muscle_share/firebase_options.dart';
 //import 'package:muscle_share/methods/alert.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -70,7 +71,7 @@ void main() async {
   // );
   // await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
-  runApp(const MyApp());
+  runApp(const Portal(child: MyApp()));
   // setupPushNotifications();
   // // 🔔 通知設定
 }

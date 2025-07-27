@@ -76,26 +76,30 @@ class _ToolSelectionScreenState extends State<ToolSelectionScreen> {
             if (data is Map<String, dynamic>) {
               double totalVolume = 0.0;
               String name = data["name"] ?? "";
-
-              data.forEach((key, value) {
-                if (key != "name" &&
-                    value is List &&
-                    key != "like" &&
-                    key != "comment") {
-                  for (var set in value) {
-                    totalVolume += (set["weight"] ?? 0) * (set["reps"] ?? 0);
+              bool isPublic = data["isPublic"] ?? false;
+              if (isPublic) {
+                data.forEach((key, value) {
+                  if (key != "name" &&
+                      value is List &&
+                      key != "like" &&
+                      key != "comment" &&
+                      key != "isPublic") {
+                    for (var set in value) {
+                      totalVolume += (set["weight"] ?? 0) * (set["reps"] ?? 0);
+                    }
                   }
-                }
-              });
+                });
 
-              allFriendsHistories.add({
-                "deviceId": friendId,
-                "date": date,
-                "name": name,
-                "totalVolume": totalVolume,
-                "data": data,
-              });
+                allFriendsHistories.add({
+                  "deviceId": friendId,
+                  "date": date,
+                  "name": name,
+                  "totalVolume": totalVolume,
+                  "data": data,
+                });
+              }
             }
+            print(allFriendsHistories);
           });
         }
       }

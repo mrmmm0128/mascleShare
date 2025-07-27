@@ -106,45 +106,102 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
                       margin: EdgeInsets.only(bottom: 8),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 12),
+                            vertical: 8, horizontal: 8),
                         child: Row(
                           children: [
                             Expanded(
                               flex: 2,
                               child: TextFormField(
                                 initialValue: record['name'] ?? '',
-                                decoration: _inputDecoration("種目名"),
-                                style: TextStyle(color: Colors.black),
+                                style: TextStyle(
+                                    color: Colors.yellowAccent), // 入力文字の色
+                                decoration: _inputDecoration("種目名").copyWith(
+                                  filled: true,
+                                  fillColor: Colors.grey[850], // 背景色
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: Colors.yellow),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.amber, width: 2),
+                                  ),
+                                  hintStyle: TextStyle(
+                                      color: Colors.white54), // プレースホルダーの色
+                                ),
                                 onChanged: (value) {
                                   bestRecords[part]![index]['name'] = value;
                                 },
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: 5),
                             Expanded(
-                              child: DropdownButtonFormField<int>(
+                              child: DropdownButtonFormField<double>(
                                 value: record['weight'] ?? 0,
-                                decoration: _inputDecoration("kg"),
-                                items: List.generate(41, (i) {
-                                  int kg = i * 5;
-                                  return DropdownMenuItem(
-                                      value: kg, child: Text("$kg kg"));
+                                dropdownColor:
+                                    Colors.grey[900], // ドロップダウンメニューの背景色
+                                decoration: _inputDecoration("kg").copyWith(
+                                  filled: true,
+                                  fillColor: Colors.grey[850], // フィールド背景色
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: Colors.yellow),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.amber, width: 2),
+                                  ),
+                                ),
+                                style:
+                                    TextStyle(color: Colors.yellow), // 選択済み文字色
+                                iconEnabledColor: Colors.yellow, // ▼ アイコン色
+                                items: List.generate(601, (i) {
+                                  double kg = i * 0.5;
+                                  return DropdownMenuItem<double>(
+                                    value: kg,
+                                    child: Text(
+                                      "${kg.toStringAsFixed(1)} kg",
+                                      style:
+                                          TextStyle(color: Colors.yellowAccent),
+                                    ),
+                                  );
                                 }),
+
                                 onChanged: (value) {
                                   bestRecords[part]![index]['weight'] =
                                       value ?? 0;
                                 },
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: 5),
                             Expanded(
                               child: DropdownButtonFormField<int>(
                                 value: record['reps'] ?? 1,
-                                decoration: _inputDecoration("回数"),
+                                dropdownColor: Colors.grey[900],
+                                decoration: _inputDecoration("回数").copyWith(
+                                  filled: true,
+                                  fillColor: Colors.grey[850],
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: Colors.yellow),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.amber, width: 2),
+                                  ),
+                                ),
+                                style: TextStyle(color: Colors.yellow),
+                                iconEnabledColor: Colors.yellow,
                                 items: List.generate(30, (i) {
                                   int reps = i + 1;
                                   return DropdownMenuItem(
-                                      value: reps, child: Text("$reps 回"));
+                                    value: reps,
+                                    child: Text(
+                                      "$reps 回",
+                                      style:
+                                          TextStyle(color: Colors.yellowAccent),
+                                    ),
+                                  );
                                 }),
                                 onChanged: (value) {
                                   bestRecords[part]![index]['reps'] =

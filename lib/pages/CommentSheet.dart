@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_mentions/flutter_mentions.dart';
 //import 'package:intl/intl.dart';
 import 'package:muscle_share/methods/AddCommentLike.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
@@ -16,17 +17,72 @@ class CommentSheet extends StatefulWidget {
 }
 
 class _CommentSheetState extends State<CommentSheet> {
-  final TextEditingController _controller = TextEditingController();
   List<Map<String, String>> commentList = [];
   String myDeviceId = "";
+  // ignore: unused_field
+
+  final TextEditingController _controller = TextEditingController();
+  final GlobalKey<FlutterMentionsState> _key =
+      GlobalKey<FlutterMentionsState>();
+
+  List<Map<String, String>> _mentionUsers = []; // id, display, photo用（後で使う）
 
   @override
   void initState() {
     super.initState();
+    _loadMentionUsers();
+  }
+
+  Future<void> _loadMentionUsers() async {
+    final myDeviceId = await getDeviceIDweb();
+    final friendDoc = await FirebaseFirestore.instance
+        .collection(myDeviceId)
+        .doc("profile")
+        .get();
+
+    if (friendDoc.exists) {
+      final friends = friendDoc.data()!;
+      _mentionUsers.clear();
+      List<String> friendsList = List<String>.from(friends["friendDeviceId"]);
+
+      for (String friendId in friendsList) {
+        final profileDoc = await FirebaseFirestore.instance
+            .collection(friendId)
+            .doc("profile")
+            .get();
+
+        if (profileDoc.exists) {
+          final name = profileDoc.data()?["name"] ?? "Unknown";
+          final photo = profileDoc.data()?["photo"] ?? "";
+          _mentionUsers.add({
+            'id': friendId,
+            'display': name,
+            'photo': photo,
+          });
+        }
+      }
+      print(_mentionUsers);
+      setState(() {});
+    }
   }
 
   Future<void> initialize() async {
     myDeviceId = await getDeviceIDweb();
+  }
+
+  List<String> extractMentionIds(String markupText) {
+    final RegExp reg = RegExp(r'\@\[\_\_(.*?)\_\_\]');
+    final matches = reg.allMatches(markupText);
+
+    return matches.map((match) => match.group(1) ?? "").toList();
+  }
+
+  String convertMarkupToDisplayText(String markupText) {
+    final RegExp reg = RegExp(r'\@\[\_\_.*?\_\_\]\(__([^\)]+)__\)');
+    return markupText.replaceAllMapped(reg, (match) {
+      final displayName = match.group(1);
+      return '@$displayName';
+    });
   }
 
   @override
@@ -156,14 +212,32 @@ class _CommentSheetState extends State<CommentSheet> {
             },
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: _controller,
+          FlutterMentions(
+            key: _key,
             style: const TextStyle(color: Colors.white),
+            suggestionPosition: SuggestionPosition.Bottom,
             decoration: const InputDecoration(
               hintText: 'コメントを入力...',
               hintStyle: TextStyle(color: Colors.white54),
               border: OutlineInputBorder(),
             ),
+            mentions: [
+              Mention(
+                trigger: "@",
+                style: const TextStyle(color: Colors.yellowAccent),
+                data: _mentionUsers,
+                suggestionBuilder: (data) {
+                  return ListTile(
+                    leading: data['photo'] != ""
+                        ? CircleAvatar(
+                            backgroundImage: NetworkImage(data['photo']))
+                        : const CircleAvatar(child: Icon(Icons.person)),
+                    title: Text(data['display'],
+                        style: const TextStyle(color: Colors.black)),
+                  );
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           ElevatedButton(
@@ -172,9 +246,11 @@ class _CommentSheetState extends State<CommentSheet> {
               foregroundColor: Colors.black,
             ),
             onPressed: () async {
-              final text = _controller.text.trim();
+              final markupText =
+                  _key.currentState?.controller?.markupText ?? "";
+              final mentionedIds = extractMentionIds(markupText);
 
-              // 不適切な単語リスト
+              final lowerText = convertMarkupToDisplayText(markupText);
               final List<String> prohibitedWords = [
                 'ちんこ',
                 'まんこ',
@@ -188,28 +264,23 @@ class _CommentSheetState extends State<CommentSheet> {
                 'f○ck'
               ];
 
-              // NGワードを含んでいるかチェック（大文字小文字問わず）
-              bool containsNG = prohibitedWords.any(
-                (word) => text.toLowerCase().contains(word.toLowerCase()),
-              );
-
-              if (containsNG) {
+              if (prohibitedWords.any((word) => lowerText.contains(word))) {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
                     backgroundColor: Colors.black,
-                    title: Text(
+                    title: const Text(
                       "不適切な内容",
                       style: TextStyle(color: Color.fromARGB(255, 209, 209, 0)),
                     ),
-                    content: Text(
+                    content: const Text(
                       "コメントに不適切な表現が含まれています。",
                       style: TextStyle(color: Colors.white),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: Text("OK",
+                        child: const Text("OK",
                             style: TextStyle(
                                 color: Color.fromARGB(255, 209, 209, 0))),
                       ),
@@ -219,10 +290,14 @@ class _CommentSheetState extends State<CommentSheet> {
                 return;
               }
 
-              if (text.isNotEmpty) {
-                await AddCommentLike.addComment(
-                    widget.deviceId, widget.date, text);
-                _controller.clear();
+              if (markupText.trim().isNotEmpty) {
+                await AddCommentLike.addCommentWithMentions(
+                  deviceId: widget.deviceId,
+                  date: widget.date,
+                  commentText: lowerText,
+                  mentionedIds: mentionedIds,
+                );
+                _key.currentState?.controller?.clear(); // メンション付き入力クリア
               }
             },
             child: const Text(

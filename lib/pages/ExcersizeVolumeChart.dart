@@ -82,7 +82,7 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
           final sets = value[exerciseName];
 
           if (date != null && sets is List) {
-            double maxRM = 0.0;
+            int maxRM = 0;
 
             for (var set in sets) {
               final double weight = (set['weight'] ?? 0).toDouble();
@@ -91,12 +91,12 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
               if (weight > 0 && reps > 0) {
                 final rm = weight * (1 + reps / 30); // Epley式
                 if (rm > maxRM) {
-                  maxRM = rm;
+                  maxRM = rm.toInt();
                 }
               }
             }
 
-            tempMaxRMByDate[date] = maxRM;
+            tempMaxRMByDate[date] = maxRM.toDouble();
           }
         }
       });
@@ -105,8 +105,7 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
     print(tempMaxRMByDate);
 
     setState(() {
-      volumeByDate =
-          tempMaxRMByDate; // volumeByDate ではなく maxRMByDate に変えるならここも変更
+      volumeByDate = tempMaxRMByDate;
     });
   }
 
@@ -147,7 +146,7 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -212,7 +211,7 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
                       style:
                           TextStyle(color: Color.fromARGB(255, 209, 209, 0))))
               : Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(25),
                   child: LineChart(
                     LineChartData(
                       titlesData: FlTitlesData(

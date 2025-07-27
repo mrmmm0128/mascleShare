@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:muscle_share/methods/DeleteAccount.dart';
-import 'package:muscle_share/methods/PhotoCropper.dart';
+
 import 'package:muscle_share/methods/PhotoSelect.dart';
 import 'package:muscle_share/methods/FetchInfoProfile.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
@@ -75,42 +75,25 @@ class ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  // カメラを起動して画像を取得する
-  Future<void> _takePhoto() async {
+  Future<void> _takePhoto(BuildContext context) async {
     final picker = ImagePicker();
-    deviceId = await getDeviceIDweb(); // デバイス ID を取得
-
     try {
-      pickedFile = await picker.pickImage(source: ImageSource.camera);
+      final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
       if (pickedFile != null) {
-        if (kIsWeb) {
-          try {
-            Uint8List rawBytes = await pickedFile!.readAsBytes();
+        final Uint8List rawBytes = await pickedFile.readAsBytes();
 
-            // 🌟 トリミング画面に移動
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CropPhaseScreen(
-                  imageBytes: rawBytes,
-                  onCropped: (Uint8List croppedBytes) {
-                    setState(() {
-                      imageBytes = croppedBytes;
-                    });
-                  },
-                ),
-              ),
-            );
-          } catch (e) {
-            print("トリミングエラー: $e");
-          }
-        }
+        setState(() {
+          this.pickedFile = pickedFile; // ← 正しく状態を更新
+          imageBytes = rawBytes;
+        });
+
+        print("✅ 画像を即時反映しました (${rawBytes.length} bytes)");
       } else {
-        print("❌ No image selected.");
+        print("❌ 画像が選択されませんでした");
       }
     } catch (e) {
-      print("❌ エラーが発生しました: $e");
+      print("❌ カメラエラー: $e");
     }
   }
 
@@ -350,7 +333,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
                             child: IconButton(
-                              onPressed: _takePhoto,
+                              onPressed: () =>
+                                  _takePhoto(context), // ✅ 無名関数でラップ
                               icon: Icon(Icons.photo, color: Colors.black87),
                               iconSize: 20,
                               tooltip: '写真を撮る',

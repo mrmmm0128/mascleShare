@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/UseTemplates.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
+import 'package:muscle_share/pages/EditTrainingScreen.dart';
 import 'package:muscle_share/pages/Header.dart';
 import 'package:muscle_share/pages/TrainingDetailScreen.dart';
 
@@ -71,9 +73,12 @@ class _HistoryRecording extends State<HistoryRecording> {
                           final date = entry.key;
                           final data = entry.value as Map<String, dynamic>;
 
-                          final templateName = data["name"] ?? "";
                           final totalVolume = data["totalVolume"] ?? 0.0;
+                          List<String> parts = date.split(' ');
                           final trainingData = data["data"] ?? {};
+                          final templateName = parts[1];
+
+                          final historyKey = date;
 
                           return GestureDetector(
                             onTap: () {
@@ -96,28 +101,90 @@ class _HistoryRecording extends State<HistoryRecording> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 5,
-                              child: Column(
-                                children: [
-                                  ListTile(
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8),
-                                    title: Text(
-                                      date,
-                                      style: TextStyle(
-                                        color: Colors.yellowAccent,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      "総ボリューム: ${totalVolume.toStringAsFixed(2)} kg·回",
-                                      style: TextStyle(
-                                          color: Colors.white70, fontSize: 12),
-                                    ),
-                                    trailing: Icon(Icons.fitness_center,
-                                        color: Colors.white, size: 24),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                title: Text(
+                                  date,
+                                  style: TextStyle(
+                                    color: Colors.yellowAccent,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
-                                ],
+                                ),
+                                subtitle: Text(
+                                  "総ボリューム: ${totalVolume.toStringAsFixed(2)} kg·回",
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 12),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon:
+                                          Icon(Icons.edit, color: Colors.grey),
+                                      onPressed: () async {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                EditTrainingScreen(
+                                              name: templateName,
+                                              trainingData: trainingData,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete,
+                                          color: Colors.redAccent),
+                                      onPressed: () async {
+                                        final confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: Text("削除確認"),
+                                            content: Text("この履歴を削除しますか？"),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, false),
+                                                child: Text("キャンセル"),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, true),
+                                                child: Text("削除する",
+                                                    style: TextStyle(
+                                                        color: Colors.red)),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+
+                                        if (confirm == true) {
+                                          print(historyKey);
+                                          await FirebaseFirestore.instance
+                                              .collection(deviceId)
+                                              .doc("history")
+                                              .update({
+                                            historyKey: FieldValue.delete()
+                                          });
+
+                                          setState(() {
+                                            history.remove(entry.key);
+                                          });
+
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                                content: Text("履歴を削除しました")),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           );

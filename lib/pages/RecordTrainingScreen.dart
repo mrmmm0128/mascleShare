@@ -22,10 +22,10 @@ class RecordTrainingScreen extends StatefulWidget {
 
 class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
   final Map<String, int> setCounts = {};
-  final Map<String, List<Map<String, dynamic>>> exerciseData = {};
+  final Map<String, dynamic> exerciseData = {};
   String deviceId = "";
   late List<String> localExercises;
-
+  bool isPublic = true;
   final List<int> _RepOptions = List.generate(61, (index) => index);
   final List<double> _weightOptions =
       List.generate(300, (index) => index * 0.5);
@@ -38,7 +38,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
     for (String exercise in localExercises) {
       setCounts[exercise] = 1;
       exerciseData[exercise] = [
-        {"weight": 0, "reps": 0}
+        {"weight": 0.0, "reps": 0}
       ];
     }
     loadDraft();
@@ -84,6 +84,54 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
       backgroundColor: Colors.black,
       body: Column(
         children: [
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: Row(
+              children: [
+                Icon(Icons.lock_open, color: Colors.yellowAccent),
+                SizedBox(width: 8),
+                Text("公開設定：",
+                    style: TextStyle(color: Colors.yellowAccent, fontSize: 16)),
+                SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<bool>(
+                    value: isPublic, // ← bool型の変数を定義してください
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[850],
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.yellow),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber, width: 2),
+                      ),
+                    ),
+                    dropdownColor: Colors.grey[900],
+                    iconEnabledColor: Colors.yellow,
+                    style: TextStyle(color: Colors.yellow),
+                    items: [
+                      DropdownMenuItem(
+                        value: true,
+                        child: Text("公開",
+                            style: TextStyle(color: Colors.yellowAccent)),
+                      ),
+                      DropdownMenuItem(
+                        value: false,
+                        child: Text("非公開",
+                            style: TextStyle(color: Colors.yellowAccent)),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        isPublic = value ?? true;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: ReorderableListView(
               padding: const EdgeInsets.all(16),
@@ -235,7 +283,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                               if (data.isNotEmpty) {
                                 final last = data.last;
                                 data.add({
-                                  "weight": last["weight"] ?? 0,
+                                  "weight": last["weight"] ?? 0.0,
                                   "reps": last["reps"] ?? 0,
                                 });
                               } else {
@@ -262,6 +310,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('記録が保存されました。')),
                 );
+                exerciseData["isPublic"] = isPublic;
                 await UseTemplates.saveTraining(
                     deviceId, widget.name, exerciseData);
 
@@ -282,7 +331,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                 minimumSize: Size(MediaQuery.of(context).size.width / 6, 48),
               ),
               child: Text(
-                "保存する",
+                "本日のトレーニングを終了する",
                 style: TextStyle(color: Colors.black),
               ),
             ),

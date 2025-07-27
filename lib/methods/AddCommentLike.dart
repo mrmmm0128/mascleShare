@@ -42,6 +42,74 @@ class AddCommentLike {
     }
   }
 
+  static Future<void> addCommentWithMentions({
+    required String deviceId, // 投稿者の deviceId（コメントが付く側）
+    required String date, // "2025-07-27 Chest" などのキー
+    required String commentText, // markupText（@[...]形式の文字列）
+    required List<String> mentionedIds,
+  }) async {
+    final myDeviceId = await getDeviceIDweb();
+    print(deviceId);
+    print(mentionedIds);
+
+    try {
+      final info = await fetchInfo(); // {url, name, ...}
+      final url = info["url"] ?? "";
+      final name = info["name"] ?? "";
+
+      final historyRef =
+          FirebaseFirestore.instance.collection(deviceId).doc('history');
+      final notfRef =
+          FirebaseFirestore.instance.collection(deviceId).doc('notification');
+
+      // コメント1件分のペイロード
+      final payload = [
+        {
+          "name": name,
+          "url": url,
+          "comment": commentText,
+          "deviceId": myDeviceId,
+          "mentionedIds": mentionedIds, // ← 後で使えるよう保存しておくと便利
+          "createdAt": Timestamp.now(),
+        }
+      ];
+
+      // history にコメントを push（comment フィールドが無くても merge で安全に）
+      await historyRef
+          .update({'$date.comment': FieldValue.arrayUnion(payload)});
+
+      // 投稿者への「コメント通知」
+      if (deviceId != myDeviceId) {
+        await notfRef.set({
+          'comment': {
+            date: {myDeviceId: false}
+          }
+        }, SetOptions(merge: true));
+      }
+
+      // メンションされたユーザーへの「メンション通知」
+      for (final mentionedId in mentionedIds) {
+        if (mentionedId == deviceId || mentionedId == myDeviceId) continue;
+
+        print(mentionedId);
+        final mentionedNotfRef = FirebaseFirestore.instance
+            .collection(mentionedId)
+            .doc('notification');
+
+        print(mentionedId);
+        await mentionedNotfRef.set({
+          'mention': {
+            date: {myDeviceId: false}
+          }
+        }, SetOptions(merge: true));
+      }
+    } catch (e, st) {
+      print("❌ コメント保存エラー: $e");
+      print(st);
+      rethrow;
+    }
+  }
+
   static Future<void> addComment(
     String deviceId,
     String date,
