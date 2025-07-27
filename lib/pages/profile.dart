@@ -60,7 +60,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> initializeProfile() async {
-    deviceId = await getDeviceIDweb();
+    deviceId = await getDeviceUUID();
     infoList = await fetchInfo();
 
     setState(() {

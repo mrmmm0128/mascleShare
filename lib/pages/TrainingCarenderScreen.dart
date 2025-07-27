@@ -28,7 +28,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
   }
 
   Future<void> _loadTrainingDates() async {
-    myId = await getDeviceIDweb();
+    myId = await getDeviceUUID();
 
     // 自分と友人一覧を取得（例: friends コレクションを使う）
     final friendsSnapshot = await FirebaseFirestore.instance

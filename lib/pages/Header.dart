@@ -38,7 +38,7 @@ class _HeaderState extends State<Header> {
   }
 
   Future<void> _initDeviceIdAndLoadNotifications() async {
-    final id = await getDeviceIDweb();
+    final id = await getDeviceUUID();
     if (mounted) {
       setState(() {
         _deviceId = id;

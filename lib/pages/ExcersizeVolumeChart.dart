@@ -29,7 +29,7 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
   }
 
   Future<void> _loadExerciseNames() async {
-    String deviceId = await getDeviceIDweb();
+    String deviceId = await getDeviceUUID();
     final doc = await FirebaseFirestore.instance
         .collection(deviceId)
         .doc("history")
@@ -60,7 +60,7 @@ class _ExerciseVolumeChartState extends State<ExerciseVolumeChart> {
   }
 
   Future<void> _loadMaxRMData(String exerciseName) async {
-    String deviceId = await getDeviceIDweb();
+    String deviceId = await getDeviceUUID();
     final doc = await FirebaseFirestore.instance
         .collection(deviceId)
         .doc("history")

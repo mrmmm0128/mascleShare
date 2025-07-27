@@ -40,7 +40,7 @@ class _EditTrainingScreenState extends State<EditTrainingScreen> {
   }
 
   Future<void> initialize() async {
-    deviceId = await getDeviceIDweb();
+    deviceId = await getDeviceUUID();
   }
 
   void saveDraft() async {

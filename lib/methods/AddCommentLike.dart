@@ -48,7 +48,7 @@ class AddCommentLike {
     required String commentText, // markupText（@[...]形式の文字列）
     required List<String> mentionedIds,
   }) async {
-    final myDeviceId = await getDeviceIDweb();
+    final myDeviceId = await getDeviceUUID();
     print(deviceId);
     print(mentionedIds);
 
@@ -115,7 +115,7 @@ class AddCommentLike {
     String date,
     String comment,
   ) async {
-    String mydeviceId = await getDeviceIDweb();
+    String mydeviceId = await getDeviceUUID();
     try {
       Map<String, dynamic> infoList = await fetchInfo();
       String url = infoList["url"];

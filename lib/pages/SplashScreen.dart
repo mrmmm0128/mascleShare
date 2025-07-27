@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkProfile() async {
-    String deviceId = await getDeviceIDweb();
+    String deviceId = await getDeviceUUID();
 
     final profileDoc = await FirebaseFirestore.instance
         .collection(deviceId)

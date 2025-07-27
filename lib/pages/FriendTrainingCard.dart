@@ -40,7 +40,7 @@ class _FriendTrainingCardState extends State<FriendTrainingCard> {
   }
 
   Future<void> fetchOtherInfo(String deviceId) async {
-    mydeviceId = await getDeviceIDweb();
+    mydeviceId = await getDeviceUUID();
     try {
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
           .collection(deviceId)

@@ -34,7 +34,7 @@ class _CommentSheetState extends State<CommentSheet> {
   }
 
   Future<void> _loadMentionUsers() async {
-    final myDeviceId = await getDeviceIDweb();
+    final myDeviceId = await getDeviceUUID();
     final friendDoc = await FirebaseFirestore.instance
         .collection(myDeviceId)
         .doc("profile")
@@ -67,7 +67,7 @@ class _CommentSheetState extends State<CommentSheet> {
   }
 
   Future<void> initialize() async {
-    myDeviceId = await getDeviceIDweb();
+    myDeviceId = await getDeviceUUID();
   }
 
   List<String> extractMentionIds(String markupText) {
