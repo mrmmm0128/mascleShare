@@ -606,27 +606,27 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
               children: [
                 Row(
                   children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => HistoryRecording()),
-                          );
-                        },
-                        icon: Icon(Icons.fitness_center),
-                        label: Text("トレーニング履歴"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[800],
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16), // ✅ 丸み
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                        ),
-                      ),
-                    ),
+                    // Expanded(
+                    //   child: ElevatedButton.icon(
+                    //     onPressed: () {
+                    //       Navigator.push(
+                    //         context,
+                    //         MaterialPageRoute(
+                    //             builder: (context) => HistoryRecording()),
+                    //       );
+                    //     },
+                    //     icon: Icon(Icons.fitness_center),
+                    //     label: Text("トレーニング履歴"),
+                    //     style: ElevatedButton.styleFrom(
+                    //       backgroundColor: Colors.grey[800],
+                    //       foregroundColor: Colors.white,
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(16), // ✅ 丸み
+                    //       ),
+                    //       padding: EdgeInsets.symmetric(vertical: 14),
+                    //     ),
+                    //   ),
+                    // ),
                     // SizedBox(width: 12),
                     // Expanded(
                     //   child: ElevatedButton.icon(
