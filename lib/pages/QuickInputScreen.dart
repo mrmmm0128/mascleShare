@@ -34,18 +34,17 @@ class _QuickInputScreenState extends State<QuickInputScreen> {
   };
 
   final List<String> templateNames = [
-    'All',
-    'Chest',
-    'Back',
-    'Legs',
-    'Arms',
-    "Shoulder",
-    "hip",
-    "Aerobic exercise",
-    "Upper body",
-    "Lower body",
-    "push",
-    "pull"
+    '全身',
+    '胸',
+    '背中',
+    '脚',
+    '腕',
+    '肩',
+    '臀部',
+    '上半身',
+    '下半身',
+    'プッシュ',
+    'プル',
   ];
   String? selectedTemplateName;
 

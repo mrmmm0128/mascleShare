@@ -51,13 +51,13 @@ class AddCommentLike {
     final myDeviceId = await getDeviceUUID();
     print(deviceId);
     print(mentionedIds);
-    DocumentSnapshot snapshot = await FirebaseFirestore.instance
-        .collection(deviceId)
-        .doc("profile")
-        .get();
+    // DocumentSnapshot snapshot = await FirebaseFirestore.instance
+    //     .collection(deviceId)
+    //     .doc("profile")
+    //     .get();
 
-    Map<String, dynamic>? data = snapshot.data() as Map<String, dynamic>?;
-    String nameOrigin = data!["name"];
+    //Map<String, dynamic>? data = snapshot.data() as Map<String, dynamic>?;
+    //String nameOrigin = data!["name"];
 
     try {
       final info = await fetchInfo(); // {url, name, ...}

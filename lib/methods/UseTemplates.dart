@@ -94,7 +94,9 @@ class UseTemplates {
           if (key != "name" &&
               value is List<dynamic> &&
               key != "like" &&
-              key != "comment") {
+              key != "comment" &&
+              key != "myComment" &&
+              key != "isPublic") {
             value.forEach((set) {
               final weight = set['weight'] ?? 0;
               final reps = set['reps'] ?? 0;

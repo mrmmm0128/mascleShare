@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:muscle_share/pages/ExcersizeVolumeChart.dart';
 import 'package:muscle_share/pages/FriendTrainingDetailScreen.dart';
 import 'package:muscle_share/pages/Header.dart';
+import 'package:muscle_share/pages/HistoryRecording.dart';
 import 'package:muscle_share/pages/TrainingDetailScreen.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,7 +16,7 @@ class TrainingCalendarScreen extends StatefulWidget {
 }
 
 class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
-  Set<DateTime> _trainingDates = {};
+  //Set<DateTime> _trainingDates = {};
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<String, Map<String, int>> _trainingDateUserMap = {};
@@ -245,6 +246,34 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
         child: Column(
           children: [
             const SizedBox(height: 15),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.8, // ✅ 横幅80%
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HistoryRecording()),
+                  );
+                },
+                icon: Icon(Icons.fitness_center),
+                label: Text("自分のトレーニング履歴"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+            const SizedBox(height: 15),
+            Text("友人とトレーニングの頻度を比較しよう",
+                style: TextStyle(
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14)),
+            Divider(color: Colors.grey[800]),
             Padding(
               padding: EdgeInsets.all(10),
               child: Align(
@@ -340,11 +369,12 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            Container(
-              width: double.infinity, // 横幅いっぱい
-              height: 1,
-              color: Colors.grey, // 境界線の色
-            ),
+            Text("種目ごとのMaxRMの成長を確認しましょう",
+                style: TextStyle(
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14)),
+            Divider(color: Colors.grey[800]),
             Padding(
               padding: EdgeInsets.all(10),
               child: Align(

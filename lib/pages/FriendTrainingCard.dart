@@ -122,9 +122,11 @@ class _FriendTrainingCardState extends State<FriendTrainingCard> {
     }
 
     double totalVolume = 0.0;
+    String comment = widget.training["data"]["myComment"] ?? "";
     Map<String, dynamic> exerciseMap = widget.training["data"] ?? {};
     exerciseMap.forEach((exerciseName, sets) {
-      if (!["like", "comment", "isPublic"].contains(exerciseName)) {
+      if (!["like", "comment", "isPublic", "myComment"]
+          .contains(exerciseName)) {
         if (sets is List) {
           for (var set in sets) {
             final weight = (set["weight"] ?? 0).toDouble();
@@ -175,17 +177,33 @@ class _FriendTrainingCardState extends State<FriendTrainingCard> {
                   backgroundColor: Colors.yellowAccent,
                   radius: 20,
                 ),
-                title: Text(
-                  name,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      date,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      name,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
                 ),
                 subtitle: Text(
-                  date,
-                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                  "comment: $comment",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -221,7 +239,8 @@ class _FriendTrainingCardState extends State<FriendTrainingCard> {
                     ),
                     SizedBox(width: 8),
                     IconButton(
-                      icon: Icon(Icons.comment, color: Colors.white, size: 22),
+                      icon:
+                          Icon(Icons.comment, color: Colors.white70, size: 22),
                       onPressed: () {
                         _showCommentSheet(context, widget.friendDeviceId, date);
                       },
@@ -239,7 +258,7 @@ class _FriendTrainingCardState extends State<FriendTrainingCard> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                 child: Text(
                   "総ボリューム: ${totalVolume.toStringAsFixed(2)} kg·回",
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ),
             ],

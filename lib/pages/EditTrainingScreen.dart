@@ -24,19 +24,28 @@ class _EditTrainingScreenState extends State<EditTrainingScreen> {
   final List<double> _weightOptions =
       List.generate(300, (index) => index * 0.5);
   late Map<String, dynamic> exerciseData;
+  late final TextEditingController _commentController;
   late List<String> localExercises;
   bool isPublic = true;
   String deviceId = "";
+  String myComment = "";
 
   @override
   void initState() {
     super.initState();
     initialize();
     exerciseData = Map<String, dynamic>.from(widget.trainingData);
+    print(exerciseData);
     localExercises = exerciseData.keys
-        .where((e) => e != "isPublic" && e != "like" && e != "comment")
+        .where((e) =>
+            e != "isPublic" &&
+            e != "like" &&
+            e != "comment" &&
+            e != "myComment")
         .toList();
     isPublic = widget.trainingData["isPublic"] ?? true;
+    myComment = widget.trainingData["myComment"] ?? "";
+    _commentController = TextEditingController(text: myComment);
   }
 
   Future<void> initialize() async {
@@ -45,15 +54,34 @@ class _EditTrainingScreenState extends State<EditTrainingScreen> {
 
   void saveDraft() async {
     final prefs = await SharedPreferences.getInstance();
-    final draftJson = exerciseData.map((key, value) => MapEntry(
-        key,
-        value
-            .map((set) => {
-                  "weight": set["weight"],
-                  "reps": set["reps"],
-                })
-            .toList()));
+    final draftJson = exerciseData.map((key, value) {
+      if (value is List) {
+        // 種目データ（List<Map<String, dynamic>>）の場合
+        return MapEntry(
+          key,
+          value
+              .map((set) => {
+                    "weight": set["weight"],
+                    "reps": set["reps"],
+                  })
+              .toList(),
+        );
+      } else {
+        // コメント・公開設定などその他の単一データの場合
+        return MapEntry(key, value);
+      }
+    });
+
     await prefs.setString('edit_draft_${widget.name}', jsonEncode(draftJson));
+  }
+
+  double _parseToDouble(dynamic val) {
+    if (val is double) return val;
+    if (val is int) return val.toDouble();
+    if (val is String) {
+      return double.tryParse(val) ?? 0.0;
+    }
+    return 0.0;
   }
 
   @override
@@ -105,6 +133,47 @@ class _EditTrainingScreenState extends State<EditTrainingScreen> {
                         isPublic = value ?? true;
                       });
                     },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.comment, color: Colors.yellowAccent),
+                    SizedBox(width: 8),
+                    Text(
+                      "コメント入力",
+                      style:
+                          TextStyle(color: Colors.yellowAccent, fontSize: 16),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                TextFormField(
+                  controller:
+                      _commentController, // ← TextEditingControllerを定義してね
+                  maxLines: null,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'コメントを入力...',
+                    hintStyle: TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: Colors.grey[850],
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.yellow),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.amber, width: 2),
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                 ),
               ],
@@ -162,7 +231,7 @@ class _EditTrainingScreenState extends State<EditTrainingScreen> {
                               children: [
                                 Expanded(
                                   child: DropdownButtonFormField<double>(
-                                    value: data[i]["weight"]?.toDouble() ?? 0.0,
+                                    value: _parseToDouble(data[i]["weight"]),
                                     decoration: InputDecoration(
                                       labelText: "重量(kg)",
                                       labelStyle:
@@ -210,7 +279,7 @@ class _EditTrainingScreenState extends State<EditTrainingScreen> {
                                     }).toList(),
                                     onChanged: (val) {
                                       setState(() {
-                                        data[i]["reps"] = val!;
+                                        data[i]["reps"] = val ?? 0;
                                         saveDraft();
                                       });
                                     },

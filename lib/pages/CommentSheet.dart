@@ -21,7 +21,7 @@ class _CommentSheetState extends State<CommentSheet> {
   String myDeviceId = "";
   // ignore: unused_field
 
-  final TextEditingController _controller = TextEditingController();
+  //final TextEditingController _controller = TextEditingController();
   final GlobalKey<FlutterMentionsState> _key =
       GlobalKey<FlutterMentionsState>();
 
@@ -43,7 +43,8 @@ class _CommentSheetState extends State<CommentSheet> {
     if (friendDoc.exists) {
       final friends = friendDoc.data()!;
       _mentionUsers.clear();
-      List<String> friendsList = List<String>.from(friends["friendDeviceId"]);
+      List<String> friendsList =
+          List<String>.from(friends["friendDeviceId"] ?? []);
 
       for (String friendId in friendsList) {
         final profileDoc = await FirebaseFirestore.instance

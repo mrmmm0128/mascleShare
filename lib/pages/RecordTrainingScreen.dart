@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:muscle_share/methods/UseTemplates.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
@@ -23,12 +24,15 @@ class RecordTrainingScreen extends StatefulWidget {
 class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
   final Map<String, int> setCounts = {};
   final Map<String, dynamic> exerciseData = {};
+  final TextEditingController _commentController = TextEditingController();
   String deviceId = "";
   late List<String> localExercises;
   bool isPublic = true;
   final List<int> _RepOptions = List.generate(61, (index) => index);
   final List<double> _weightOptions =
       List.generate(300, (index) => index * 0.5);
+  List<double> _weightOptionsBodyWeight = [];
+  double myBodyWeight = 0.0;
 
   @override
   void initState() {
@@ -46,6 +50,19 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
 
   Future<void> initialize() async {
     deviceId = await getDeviceUUID();
+
+    final profileDoc = await FirebaseFirestore.instance
+        .collection(deviceId)
+        .doc("profile")
+        .get();
+    _weightOptionsBodyWeight =
+        List.generate(300, (index) => index * 0.5 + myBodyWeight);
+
+    setState(() {
+      myBodyWeight = (profileDoc.data()?["weight"] ?? 0.0).toDouble();
+      _weightOptionsBodyWeight =
+          List.generate(300, (index) => index * 0.5 + myBodyWeight);
+    });
   }
 
   void loadDraft() async {
@@ -132,6 +149,47 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
               ],
             ),
           ),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.comment, color: Colors.yellowAccent),
+                    SizedBox(width: 8),
+                    Text(
+                      "コメント入力",
+                      style:
+                          TextStyle(color: Colors.yellowAccent, fontSize: 16),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                TextFormField(
+                  controller:
+                      _commentController, // ← TextEditingControllerを定義してね
+                  maxLines: null,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'コメントを入力...',
+                    hintStyle: TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: Colors.grey[850],
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.yellow),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.amber, width: 2),
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: ReorderableListView(
               padding: const EdgeInsets.all(16),
@@ -172,11 +230,6 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                                 ),
                               ),
                             ),
-                            ReorderableDragStartListener(
-                              index: index,
-                              child:
-                                  Icon(Icons.drag_handle, color: Colors.white),
-                            ),
                           ],
                         ),
                         ...List.generate(data.length, (i) {
@@ -198,9 +251,12 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                                           Expanded(
                                             child:
                                                 DropdownButtonFormField<double>(
-                                              value: data[i]["weight"]
-                                                      ?.toDouble() ??
-                                                  0.0, // 型を合わせる
+                                              value: exercise != "ディップス" &&
+                                                      exercise != "チンニング"
+                                                  ? data[i]["weight"]
+                                                          ?.toDouble() ??
+                                                      0.0
+                                                  : myBodyWeight,
                                               decoration: InputDecoration(
                                                 labelText: "重量(kg)",
                                                 labelStyle: TextStyle(
@@ -212,18 +268,37 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                                               dropdownColor: Colors.grey[900],
                                               style: TextStyle(
                                                   color: Colors.white),
-                                              items:
-                                                  _weightOptions.map((weight) {
-                                                return DropdownMenuItem<double>(
-                                                  value: weight,
-                                                  child: Text(
-                                                      '${weight.toStringAsFixed(1)} kg'),
-                                                );
-                                              }).toList(),
+                                              items: exercise != "ディップス" &&
+                                                      exercise != "チンニング"
+                                                  ? _weightOptions
+                                                      .map((weight) {
+                                                      return DropdownMenuItem<
+                                                          double>(
+                                                        value: weight,
+                                                        child: Text(
+                                                            '${weight.toStringAsFixed(1)} kg'),
+                                                      );
+                                                    }).toList()
+                                                  : _weightOptionsBodyWeight
+                                                      .map((weight) {
+                                                      return DropdownMenuItem<
+                                                          double>(
+                                                        value: weight,
+                                                        child: Text(
+                                                            '${weight.toStringAsFixed(1)} kg'),
+                                                      );
+                                                    }).toList(),
                                               onChanged: (val) {
                                                 setState(() {
-                                                  data[i]["weight"] =
-                                                      val ?? 0.0;
+                                                  if (exercise != "ディップス" &&
+                                                      exercise != "チンニング") {
+                                                    data[i]["weight"] =
+                                                        val ?? 0.0;
+                                                  } else {
+                                                    data[i]["weight"] =
+                                                        val ?? myBodyWeight;
+                                                  }
+
                                                   saveDraft();
                                                 });
                                               },
@@ -281,13 +356,14 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                           onPressed: () {
                             setState(() {
                               if (data.isNotEmpty) {
-                                final last = data.last;
+                                final Map<String, dynamic> last =
+                                    Map<String, dynamic>.from(data.last);
                                 data.add({
-                                  "weight": last["weight"] ?? 0.0,
-                                  "reps": last["reps"] ?? 0,
+                                  "weight": (last["weight"] ?? 0.0) as double,
+                                  "reps": (last["reps"] ?? 0) as int,
                                 });
                               } else {
-                                data.add({"weight": 0, "reps": 0});
+                                data.add({"weight": 0.0, "reps": 0});
                               }
                             });
                             saveDraft();
@@ -295,7 +371,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                           icon: Icon(Icons.add, color: Colors.yellowAccent),
                           label: Text("セットを追加",
                               style: TextStyle(color: Colors.yellowAccent)),
-                        ),
+                        )
                       ],
                     ),
                   ),
@@ -310,6 +386,7 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('記録が保存されました。')),
                 );
+                exerciseData["myComment"] = _commentController.text;
                 exerciseData["isPublic"] = isPublic;
                 await UseTemplates.saveTraining(
                     deviceId, widget.name, exerciseData);

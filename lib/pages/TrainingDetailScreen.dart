@@ -20,7 +20,11 @@ class TrainingDetailScreen extends StatelessWidget {
     // 'name'キー以外をフィルタして表示用のMapを作る
     Map<String, dynamic> exercises = Map.from(trainingData)..remove('name');
     final visibleExercises = exercises.keys
-        .where((key) => key != "like" && key != "comment" && key != "isPublic")
+        .where((key) =>
+            key != "like" &&
+            key != "comment" &&
+            key != "isPublic" &&
+            key != "myComment")
         .toList();
 
     return Scaffold(
