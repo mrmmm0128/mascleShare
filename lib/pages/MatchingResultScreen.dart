@@ -37,6 +37,7 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
   List<Map<String, dynamic>> userList = [];
   bool _isLoading = true;
   String myDeviceId = "";
+  int _visibleCount = 10;
 
   @override
   void initState() {
@@ -149,62 +150,91 @@ class _MatchingResultScreenState extends State<MatchingResultScreen> {
     print(userList);
   }
 
+  void _loadMore() {
+    setState(() {
+      _visibleCount += 10;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: Header(
-        title: 'bro検索結果',
-      ),
+      appBar: Header(title: 'bro検索結果'),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: Colors.yellowAccent))
-          : ListView.builder(
-              itemCount: userList.length,
-              itemBuilder: (context, index) {
-                final user = userList[index];
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: userList.length < _visibleCount
+                        ? userList.length
+                        : _visibleCount,
+                    itemBuilder: (context, index) {
+                      final user = userList[index];
 
-                return myDeviceId != user["deviceId"]
-                    ? Card(
-                        color: Colors.grey[900],
-                        margin:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: ListTile(
-                          leading: user["photo"] != ""
-                              ? CircleAvatar(
-                                  backgroundImage: NetworkImage(user["photo"]),
-                                  radius: 28,
-                                )
-                              : CircleAvatar(
-                                  child:
-                                      Icon(Icons.person, color: Colors.black),
-                                  backgroundColor: Colors.yellowAccent,
-                                  radius: 28,
+                      return myDeviceId != user["deviceId"]
+                          ? Card(
+                              color: Colors.grey[900],
+                              margin: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              child: ListTile(
+                                leading: user["photo"] != ""
+                                    ? CircleAvatar(
+                                        backgroundImage:
+                                            NetworkImage(user["photo"]),
+                                        radius: 28,
+                                      )
+                                    : CircleAvatar(
+                                        child: Icon(Icons.person,
+                                            color: Colors.black),
+                                        backgroundColor: Colors.yellowAccent,
+                                        radius: 28,
+                                      ),
+                                title: Text(
+                                  user["name"] != ""
+                                      ? user["name"]
+                                      : "Not defined",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
                                 ),
-                          title: Text(
-                            user["name"] != "" ? user["name"] : "Not defined",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            "身長: ${user["height"]} cm  体重: ${user["weight"]} kg",
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                          trailing:
-                              Icon(Icons.chevron_right, color: Colors.white),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => otherProfileScreen(
-                                    deviceId: user["deviceId"]),
+                                subtitle: Text(
+                                  "身長: ${user["height"]} cm  体重: ${user["weight"]} kg",
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                                trailing: Icon(Icons.chevron_right,
+                                    color: Colors.white),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => otherProfileScreen(
+                                          deviceId: user["deviceId"]),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                      )
-                    : const SizedBox();
-              },
+                            )
+                          : const SizedBox();
+                    },
+                  ),
+                ),
+                if (userList.length > _visibleCount)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ElevatedButton(
+                      onPressed: _loadMore,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellowAccent,
+                      ),
+                      child: Text(
+                        "もっと見る",
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ),
+              ],
             ),
     );
   }

@@ -31,13 +31,15 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
   Future<void> _loadTrainingDates() async {
     myId = await getDeviceUUID();
 
-    // 自分と友人一覧を取得（例: friends コレクションを使う）
-    final friendsSnapshot = await FirebaseFirestore.instance
-        .collection("friends_of_$myId") // 例: "friends_of_abc123"
-        .get();
+    final profileDoc =
+        await FirebaseFirestore.instance.collection(myId).doc('profile').get();
+
+    final List<String> friendDeviceIds = List<String>.from(
+      profileDoc.data()?['friendDeviceId'] ?? [],
+    );
 
     List<String> allUserIds = [myId];
-    allUserIds.addAll(friendsSnapshot.docs.map((doc) => doc.id));
+    allUserIds.addAll(friendDeviceIds);
 
     // 🔥 Map<Date, Map<userId, count>>
     Map<String, Map<String, int>> trainingMap = {};

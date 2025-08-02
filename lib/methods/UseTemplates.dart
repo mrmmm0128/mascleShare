@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 class UseTemplates {
   static Future<void> saveTemplate(
@@ -45,9 +44,7 @@ class UseTemplates {
   }
 
   static Future<void> saveTraining(String deviceId, String nameTemplate,
-      Map<String, dynamic> template) async {
-    String dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
+      Map<String, dynamic> template, String dateKey) async {
     await FirebaseFirestore.instance
         .collection(deviceId)
         .doc(nameTemplate)

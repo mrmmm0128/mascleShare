@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:muscle_share/pages/EditTrainingScreen.dart';
 import 'package:muscle_share/pages/Header.dart';
 
 class TrainingDetailScreen extends StatelessWidget {
@@ -37,9 +38,32 @@ class TrainingDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(date,
-                style: TextStyle(color: Colors.yellowAccent, fontSize: 18)),
-            SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  date,
+                  style: TextStyle(color: Colors.yellowAccent, fontSize: 18),
+                ),
+                IconButton(
+                  icon: Icon(Icons.edit, color: Colors.yellowAccent),
+                  onPressed: () {
+                    List<String> parts = date.split(' ');
+
+                    String school = parts.length > 1 ? parts[0] : '';
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => EditTrainingScreen(
+                                name: templateName,
+                                trainingData: exercises,
+                                date: school,
+                              )),
+                    );
+                  },
+                ),
+              ],
+            ),
             SizedBox(height: 8),
             Text("Total Volume: ${totalVolume.toStringAsFixed(2)} kg·回",
                 style: TextStyle(color: Colors.yellowAccent, fontSize: 18)),

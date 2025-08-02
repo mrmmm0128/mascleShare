@@ -8,11 +8,13 @@ import 'package:muscle_share/pages/Header.dart';
 class EditTrainingScreen extends StatefulWidget {
   final String name;
   final Map<String, dynamic> trainingData;
+  final String date;
 
   const EditTrainingScreen({
     super.key,
     required this.name,
     required this.trainingData,
+    required this.date,
   });
 
   @override
@@ -331,7 +333,7 @@ class _EditTrainingScreenState extends State<EditTrainingScreen> {
               onPressed: () async {
                 exerciseData["isPublic"] = isPublic;
                 await UseTemplates.saveTraining(
-                    deviceId, widget.name, exerciseData);
+                    deviceId, widget.name, exerciseData, widget.date);
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.remove('edit_draft_${widget.name}');
                 ScaffoldMessenger.of(context)

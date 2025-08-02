@@ -124,6 +124,10 @@ class _HistoryRecording extends State<HistoryRecording> {
                                       icon:
                                           Icon(Icons.edit, color: Colors.grey),
                                       onPressed: () async {
+                                        List<String> parts = date.split(' ');
+
+                                        String school =
+                                            parts.length > 1 ? parts[0] : '';
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
@@ -131,6 +135,7 @@ class _HistoryRecording extends State<HistoryRecording> {
                                                 EditTrainingScreen(
                                               name: templateName,
                                               trainingData: trainingData,
+                                              date: school,
                                             ),
                                           ),
                                         );

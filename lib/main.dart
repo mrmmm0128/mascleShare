@@ -63,7 +63,6 @@ void main() async {
   );
   //await setupFirebaseMessaging();
   //FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
   // 🔔 通知チャネル初期化（iOS/Android両方に必要）
   // const initializationSettings = InitializationSettings(
   //   android: AndroidInitializationSettings('@mipmap/ic_launcher'),

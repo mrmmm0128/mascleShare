@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:muscle_share/methods/UseTemplates.dart';
 import 'package:muscle_share/methods/getDeviceId.dart';
 import 'package:muscle_share/pages/Header.dart';
@@ -388,8 +389,10 @@ class _RecordTrainingScreenState extends State<RecordTrainingScreen> {
                 );
                 exerciseData["myComment"] = _commentController.text;
                 exerciseData["isPublic"] = isPublic;
+                String dateKey =
+                    DateFormat('yyyy-MM-dd').format(DateTime.now());
                 await UseTemplates.saveTraining(
-                    deviceId, widget.name, exerciseData);
+                    deviceId, widget.name, exerciseData, dateKey);
 
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.remove('draft_${widget.name}'); // 🔸ドラフト削除
