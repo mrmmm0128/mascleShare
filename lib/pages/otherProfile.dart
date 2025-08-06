@@ -33,6 +33,7 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
   List<String> deviceIds = [];
   List<dynamic> request = [];
   bool sentRequestNow = false;
+  int totalTraining = 0;
 
   @override
   void initState() {
@@ -48,6 +49,18 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
         .collection(myDeviceId)
         .doc("profile")
         .get();
+    DocumentSnapshot snapshotHistory = await FirebaseFirestore.instance
+        .collection(widget.deviceId)
+        .doc("history")
+        .get();
+
+    if (snapshotHistory.exists && snapshotHistory.data() != null) {
+      final data = snapshotHistory.data() as Map<String, dynamic>;
+      totalTraining = data.length;
+    } else {
+      totalTraining = 0;
+    }
+
     if (snapshot.exists) {
       if (snapshot.data() != null &&
           (snapshot.data() as Map<String, dynamic>)
@@ -433,6 +446,26 @@ class _otherProfileScreenState extends State<otherProfileScreen> {
                               color: Colors.black)),
                       trailing: Text(
                         infoList["startDay"] ?? "Unknown",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+
+                  PS.buildSectionCard(
+                    title: "合計トレーニング数",
+                    child: ListTile(
+                      leading: Icon(Icons.calendar_today,
+                          color: Colors.yellowAccent),
+                      title: Text("トレーニング数",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black)),
+                      trailing: Text(
+                        totalTraining.toString(),
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

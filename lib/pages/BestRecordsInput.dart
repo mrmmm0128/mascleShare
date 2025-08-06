@@ -61,180 +61,209 @@ class _BestRecordsInputScreenState extends State<BestRecordsInputScreen> {
     }
 
     return Scaffold(
-      appBar: Header(
-        title: '最高記録を入力しましょう',
-      ),
       backgroundColor: Colors.black,
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var part in bodyParts)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      appBar: Header(title: '最高記録を入力しましょう'),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(12),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.fitness_center,
-                          color: Colors.yellowAccent, size: 18),
-                      SizedBox(width: 6),
-                      Text(
-                        part,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.yellowAccent,
-                        ),
-                      ),
-                      Spacer(),
-                      IconButton(
-                        icon:
-                            Icon(Icons.add_circle_outline, color: Colors.white),
-                        onPressed: () => _addExercise(part),
-                      ),
-                    ],
-                  ),
-                  ...bestRecords[part]!.asMap().entries.map((entry) {
-                    int index = entry.key;
-                    Map<String, dynamic> record = entry.value;
-
-                    return Card(
-                      color: Color.fromARGB(255, 30, 30, 30),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      margin: EdgeInsets.only(bottom: 8),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 8),
-                        child: Row(
+                      for (var part in bodyParts)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              flex: 2,
-                              child: TextFormField(
-                                initialValue: record['name'] ?? '',
-                                style: TextStyle(
-                                    color: Colors.yellowAccent), // 入力文字の色
-                                decoration: _inputDecoration("種目名").copyWith(
-                                  filled: true,
-                                  fillColor: Colors.grey[850], // 背景色
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide:
-                                        BorderSide(color: Colors.yellow),
+                            Row(
+                              children: [
+                                Icon(Icons.fitness_center,
+                                    color: Colors.yellowAccent, size: 18),
+                                SizedBox(width: 6),
+                                Text(
+                                  part,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.yellowAccent,
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Colors.amber, width: 2),
-                                  ),
-                                  hintStyle: TextStyle(
-                                      color: Colors.white54), // プレースホルダーの色
                                 ),
-                                onChanged: (value) {
-                                  bestRecords[part]![index]['name'] = value;
-                                },
-                              ),
+                                Spacer(),
+                                IconButton(
+                                  icon: Icon(Icons.add_circle_outline,
+                                      color: Colors.white),
+                                  onPressed: () => _addExercise(part),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: 5),
-                            Expanded(
-                              child: DropdownButtonFormField<double>(
-                                value: record['weight'] ?? 0,
-                                dropdownColor:
-                                    Colors.grey[900], // ドロップダウンメニューの背景色
-                                decoration: _inputDecoration("kg").copyWith(
-                                  filled: true,
-                                  fillColor: Colors.grey[850], // フィールド背景色
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide:
-                                        BorderSide(color: Colors.yellow),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Colors.amber, width: 2),
-                                  ),
-                                ),
-                                style:
-                                    TextStyle(color: Colors.yellow), // 選択済み文字色
-                                iconEnabledColor: Colors.yellow, // ▼ アイコン色
-                                items: List.generate(601, (i) {
-                                  double kg = i * 0.5;
-                                  return DropdownMenuItem<double>(
-                                    value: kg,
-                                    child: Text(
-                                      "${kg.toStringAsFixed(1)} kg",
-                                      style:
-                                          TextStyle(color: Colors.yellowAccent),
-                                    ),
-                                  );
-                                }),
+                            ...bestRecords[part]!.asMap().entries.map((entry) {
+                              int index = entry.key;
+                              Map<String, dynamic> record = entry.value;
 
-                                onChanged: (value) {
-                                  bestRecords[part]![index]['weight'] =
-                                      value ?? 0;
-                                },
-                              ),
-                            ),
-                            SizedBox(width: 5),
-                            Expanded(
-                              child: DropdownButtonFormField<int>(
-                                value: record['reps'] ?? 1,
-                                dropdownColor: Colors.grey[900],
-                                decoration: _inputDecoration("回数").copyWith(
-                                  filled: true,
-                                  fillColor: Colors.grey[850],
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide:
-                                        BorderSide(color: Colors.yellow),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Colors.amber, width: 2),
+                              final double weightValue =
+                                  (record['weight'] is double &&
+                                          record['weight'] >= 0)
+                                      ? record['weight']
+                                      : 0.0;
+                              final int repsValue =
+                                  (record['reps'] is int && record['reps'] > 0)
+                                      ? record['reps']
+                                      : 1;
+
+                              return Card(
+                                color: Color.fromARGB(255, 30, 30, 30),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                                margin: EdgeInsets.only(bottom: 8),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 8),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: TextFormField(
+                                          initialValue: record['name'] ?? '',
+                                          style: TextStyle(
+                                              color: Colors
+                                                  .yellowAccent), // 入力文字の色
+                                          decoration:
+                                              _inputDecoration("種目名").copyWith(
+                                            filled: true,
+                                            fillColor: Colors.grey[850], // 背景色
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.yellow),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.amber,
+                                                  width: 2),
+                                            ),
+                                            hintStyle: TextStyle(
+                                                color: Colors
+                                                    .white54), // プレースホルダーの色
+                                          ),
+                                          onChanged: (value) {
+                                            bestRecords[part]![index]['name'] =
+                                                value;
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(width: 5),
+                                      Expanded(
+                                        child: DropdownButtonFormField<double>(
+                                          value: weightValue,
+                                          dropdownColor: Colors.grey[900],
+                                          decoration:
+                                              _inputDecoration("kg").copyWith(
+                                            filled: true,
+                                            fillColor: Colors.grey[850],
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.yellow),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.amber,
+                                                  width: 2),
+                                            ),
+                                          ),
+                                          style:
+                                              TextStyle(color: Colors.yellow),
+                                          iconEnabledColor: Colors.yellow,
+                                          items: List.generate(601, (i) {
+                                            double kg = i * 0.5;
+                                            return DropdownMenuItem<double>(
+                                              value: kg,
+                                              child: Text(
+                                                "${kg.toStringAsFixed(1)} kg",
+                                                style: TextStyle(
+                                                    color: Colors.yellowAccent),
+                                              ),
+                                            );
+                                          }),
+                                          onChanged: (value) {
+                                            bestRecords[part]![index]
+                                                ['weight'] = value ?? 0.0;
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(width: 5),
+                                      Expanded(
+                                        child: DropdownButtonFormField<int>(
+                                          value: repsValue,
+                                          dropdownColor: Colors.grey[900],
+                                          decoration:
+                                              _inputDecoration("回数").copyWith(
+                                            filled: true,
+                                            fillColor: Colors.grey[850],
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.yellow),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.amber,
+                                                  width: 2),
+                                            ),
+                                          ),
+                                          style:
+                                              TextStyle(color: Colors.yellow),
+                                          iconEnabledColor: Colors.yellow,
+                                          items: List.generate(30, (i) {
+                                            int reps = i + 1;
+                                            return DropdownMenuItem(
+                                              value: reps,
+                                              child: Text(
+                                                "$reps 回",
+                                                style: TextStyle(
+                                                    color: Colors.yellowAccent),
+                                              ),
+                                            );
+                                          }),
+                                          onChanged: (value) {
+                                            bestRecords[part]![index]['reps'] =
+                                                value ?? 1;
+                                          },
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.delete,
+                                            color: Colors.redAccent),
+                                        onPressed: () =>
+                                            _removeExercise(part, index),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                style: TextStyle(color: Colors.yellow),
-                                iconEnabledColor: Colors.yellow,
-                                items: List.generate(30, (i) {
-                                  int reps = i + 1;
-                                  return DropdownMenuItem(
-                                    value: reps,
-                                    child: Text(
-                                      "$reps 回",
-                                      style:
-                                          TextStyle(color: Colors.yellowAccent),
-                                    ),
-                                  );
-                                }),
-                                onChanged: (value) {
-                                  bestRecords[part]![index]['reps'] =
-                                      value ?? 1;
-                                },
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.redAccent),
-                              onPressed: () => _removeExercise(part, index),
-                            ),
+                              );
+                            }),
                           ],
                         ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            SizedBox(height: 20),
-            Center(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromARGB(255, 209, 209, 0),
-                  foregroundColor: Colors.black,
+                      SizedBox(height: 20),
+                      Center(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromARGB(255, 209, 209, 0),
+                            foregroundColor: Colors.black,
+                          ),
+                          onPressed: () {
+                            saveBestRecords(bestRecords);
+                          },
+                          icon: Icon(Icons.save),
+                          label: Text("保存する"),
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-                onPressed: () {
-                  saveBestRecords(bestRecords);
-                },
-                icon: Icon(Icons.save),
-                label: Text("保存する"),
               ),
-            )
-          ],
+            );
+          },
         ),
       ),
     );
